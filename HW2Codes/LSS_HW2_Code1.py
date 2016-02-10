@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 #import matplotlib.pyplot as plt
 
 
-def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip):
+def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	print("Entered Basic Plot Function")
 	plot_title=" Blank Title "   
 	x_axis="Blank X"
@@ -46,6 +46,11 @@ def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip):
 	#print("Saving plot: %s" % figure_name)
 	print
 	
+	figure_name=os.path.expanduser('~/Feb9LSSHW2_plot%s.png' % pcount)
+	plt.savefig(figure_name)
+	print("Saving plot: %s" % figure_name)
+	plt.clf()
+
 	#Comment out to over plot curves.			
 	#plt.clf()
 
@@ -55,8 +60,9 @@ def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip):
 	clearVmax  = []
 	return clearmass, clearscale, clearVmax
 	"""
-	dummy = 1
+	dummy = pcounter + 1
 	return dummy
+
 
 def checkcondition(condition1, condition2):
 	if (condition1 or condition2) == False:
@@ -132,6 +138,13 @@ else:
 condition1 = True
 condition2 = True
 
+#A counter to record the number of blue & red galaxies. g-r=0.75
+g_r_more7p5counter = 0
+g_r_less7p5counter = 0
+
+#plot number counter
+pcount = 1
+
 with open(datafilename) as fp:
 
 	#Initializes the arrays for plotting
@@ -140,6 +153,7 @@ with open(datafilename) as fp:
 	z_LIST    = []		
 	abs_g_mag_LIST  = []	
 	abs_r_mag_LIST  = []	
+	gr_color_LIST   = []
 
 	for line in fp:
 		#print line
@@ -158,19 +172,28 @@ with open(datafilename) as fp:
 		abs_g_mag  = float(splitline[3])		#Sets  g-band mag
 		abs_r_mag  = float(splitline[4])		#Sets  r-band mag
 
+		g_r_color  = abs_g_mag - abs_r_mag
+		#Logic to count the number of blue and red galaxies. 
+		if g_r_color > 0.75:
+			g_r_more7p5counter += 1
+		else:
+			g_r_less7p5counter += 1
+
 		RA_LIST.append(RA_value)
 		DEC_LIST.append(DEC_value)
 		z_LIST.append(z_value)
 		abs_g_mag_LIST.append(abs_g_mag)
 		abs_r_mag_LIST.append(abs_r_mag)
+		gr_color_LIST.append(g_r_color)
+
 
 
 #PLOT FUNCTION. { X,  Y}
 # A.
 #======================================================
-title_label = "title string"
-x_label = "x axis"
-y_label = "y axis"
+title_label = "DEC vs. RA: FULL DR7"
+x_label = "RA"
+y_label = "DEC"
 x_data  = RA_LIST
 y_data  = DEC_LIST 
 pointsize = 1
@@ -184,34 +207,44 @@ else:
 	print("Length: x_data: %g" % len(x_data))
 	print("Length: y_data: %g" % len(y_data))
 
-dummyvariable = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip)
-figure_name=os.path.expanduser('~/Feb9LSSHW2_plot1_A' +'.png')
-plt.savefig(figure_name)
-print("Saving plot: %s" % figure_name)
-plt.clf()
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+
 #======================================================
 # A. part II
 #======================================================
-title_label = "title string"
-x_label = "x axisAII"
-y_label = "y axisAII"
+title_label = "r-band Mag vs. Redshift"
+x_label = "Redshift, z"
+y_label = "M_r"
 x_data  = z_LIST
 y_data  = abs_r_mag_LIST
 pointsize = 1
 yflip = True
 
-if len(x_data) != len(y_data):
-	print("ERROR! X and Y DATA LENGTHS ARE DIFFERENT!")
-	print("Length: x_data: %g" % len(x_data))
-	print("Length: y_data: %g" % len(y_data))
-else:
-	print("Length: x_data: %g" % len(x_data))
-	print("Length: y_data: %g" % len(y_data))
-
-dummyvariable = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip)
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 figure_name=os.path.expanduser('~/Feb9LSSHW2_plot2_A' +'.png')
 plt.savefig(figure_name)
-print("Saving plot: %s" % figure_name)
+print("Saving plot: %s \n\n" % figure_name)
+plt.clf()
+
 #======================================================
+# B. 
+#======================================================
+title_label = "g-r Color Distribution of galaxies"
+x_label = "Redshift, z"
+y_label = "g-r color"
+x_data  = gr_color_LIST
+y_data  = z_LIST
+pointsize = 1
+yflip = True
+
+print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
+print("There were %s  RED  galaxies!" % g_r_more7p5counter)
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+figure_name=os.path.expanduser('~/Feb9LSSHW2_plot3_B' +'.png')
+plt.savefig(figure_name)
+print("Saving plot: %s" % figure_name)
+plt.clf()
+#======================================================
+
 
 
