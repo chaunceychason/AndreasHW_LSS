@@ -1,5 +1,6 @@
 from sys import exit
 import os
+import numpy as np
 import matplotlib
 matplotlib.use( 'Agg' )
 import matplotlib.pyplot as plt
@@ -13,6 +14,16 @@ import matplotlib.pyplot as plt
 
 def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	print("Entered Basic Plot Function")
+	
+	if len(x_data) != len(y_data):
+		print("ERROR! X and Y DATA LENGTHS ARE DIFFERENT!")
+		print("Length: x_data: %g" % len(x_data))
+		print("Length: y_data: %g" % len(y_data))
+	else:
+		print("Length: x_data: %g" % len(x_data))
+		print("Length: y_data: %g" % len(y_data))
+
+
 	plot_title=" Blank Title "   
 	x_axis="Blank X"
 	y_axis="Blank Y"
@@ -51,18 +62,41 @@ def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	print("Saving plot: %s" % figure_name)
 	plt.clf()
 
-	#Comment out to over plot curves.			
-	#plt.clf()
-
-	"""
-	clearmass  = []
-	clearscale = []
-	clearVmax  = []
-	return clearmass, clearscale, clearVmax
-	"""
 	dummy = pcounter + 1
 	return dummy
 
+def get_volume(max_z):
+	#This volume uses max_redshift (max_z) to compute volume: 
+	#	Note: Uses max_z, instead of median since it is a volume limited, instead of flux-lim. 
+	"""
+	#Note: 
+		Could compute the volume accurately using the following resources:
+  				http://home.fnal.gov/~gnedin/cc/    
+		This site gives the distance between two redshifts. 
+
+	#Alternative: Use the approximation that:  D ~= 3000 * z
+	 This expression is actually more accurately D ~= 2950 * z. 	
+	"""
+	radius = 2950.*max_z 
+	DR7_SAMPLE_COVERAGE_STERADIANS = 2.295   #Should be set to 2.295 sterad. (7675.2 deg^2)
+	fract_vol = DR7_SAMPLE_COVERAGE_STERADIANS / (4.*np.pi)    #Fractional sky coverage DR7 to 4pi. 
+	vol = fract_vol*(4./3.) * np.pi * (radius**3.) 
+	return vol  #Units: [h-1 Mpc^3]
+
+def get_bluefr(red, blue):
+	if blue == 0:
+		return 0
+	blue_fraction =  blue / (1.0*red + 1.0*blue)
+	return blue_fraction
+
+def print_subsample_info(mag, x_data, red, blue ):
+	print("==================\nM_r < -%d:  \n=====================" % abs(mag))
+	print("The Redshift bounds   :[ %.4f --> %.4f ] " % (min(x_data) , max(x_data)))
+	print("The Volume is         : %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_data)))
+	print("The # of Red Galaxies : %d " % red)
+	print("The # of Blue Galaxies: %d " % blue)
+	print("The Blue Fraction     : %.3f" % get_bluefr(red, blue))
+	return True
 
 def checkcondition(condition1, condition2):
 	if (condition1 or condition2) == False:
@@ -75,11 +109,11 @@ def checkcondition(condition1, condition2):
 """
 ================================================================
 ================================================================
-
+	 
 			    7MM766Yb.  7MM766Mq.           
 			    MM    `Yb. MM   `MM.          
 			    MM     `Mb MM   ,M9 M******A' 
-			    MM      MM MMmmdM9  Y     A'  
+	SDSS -	    MM      MM MMmmdM9  Y     A'  
 			    MM     ,MP MM  YM.       A'   
 			    MM    ,dP' MM   `Mb.    A'    
 			  .JMMmmmdP' .JMML. .JMM.  A'     
@@ -139,7 +173,9 @@ NOTES:
 #Sets the datafile name for opening
 #-----------------------------------
 #datafilename = "./SDSS_DR7.dat"
-datafilename = "./SDSS_DR7sortedC.dat"  #Sorted based on M_r (most negative last) 
+#datafilename = "./SDSS_DR7sortedC.dat"  #Sorted based on M_r (most negative last) 
+datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
+#datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
 ordered_file = True
 
 """
@@ -163,8 +199,9 @@ condition1 = True
 condition2 = True
 
 #A counter to record the number of blue & red galaxies. g-r=0.75
-g_r_more7p5counter = 0
-g_r_less7p5counter = 0
+g_r_more7p5counter, g_r_more7p5counter18, g_r_more7p5counter19, g_r_more7p5counter20 = 0, 0, 0, 0
+g_r_less7p5counter, g_r_less7p5counter18, g_r_less7p5counter19, g_r_less7p5counter20 = 0, 0, 0, 0
+
 
 #plot number counter
 pcount = 1
@@ -175,6 +212,18 @@ index_18subsample = 0
 index_19subsample = 0
 index_20subsample = 0
 
+"""
+=================================================
+Sets the volume limiting redshift, from: 
+=================================================
+       RA          DEC        Z       M_r    M_g
+-20: 203.645876  20.257367 0.16635  -20.00 -21.34
+-19: 123.533843  48.703091 0.13640  -19.00 -20.95
+-18: 57.696922   -5.360849 0.07342  -18.00 -19.16
+"""
+z_lim20=0.16635 
+z_lim19=0.13640
+z_lim18=0.07342
 
 with open(datafilename) as fp:
 
@@ -239,52 +288,6 @@ with open(datafilename) as fp:
 		"""
 		g_r_color  = abs_g_mag - abs_r_mag
 	
-
-		"""
-		---------------------------------------		
-		#Logic that sets the index cutoff for the three subsample groups
-		---------------------------------------
-		"""
-		if abs_r_mag < -18:
-			RA_LIST18.append(RA_value)
-			DEC_LIST18.append(DEC_value)
-			z_LIST18.append(z_value)
-			abs_g_mag_LIST18.append(abs_g_mag)
-			abs_r_mag_LIST18.append(abs_r_mag)
-			gr_color_LIST18.append(g_r_color)
-			if abs_r_mag < -19:
-				RA_LIST19.append(RA_value)
-				DEC_LIST19.append(DEC_value)
-				z_LIST19.append(z_value)
-				abs_g_mag_LIST19.append(abs_g_mag)
-				abs_r_mag_LIST19.append(abs_r_mag)
-				gr_color_LIST19.append(g_r_color)
-				if abs_r_mag < -20:
-					RA_LIST20.append(RA_value)
-					DEC_LIST20.append(DEC_value)
-					z_LIST20.append(z_value)
-					abs_g_mag_LIST20.append(abs_g_mag)
-					abs_r_mag_LIST20.append(abs_r_mag)
-					gr_color_LIST20.append(g_r_color)
-
-
-		"""
-		print("abs_r_mag: %.3f" % abs_r_mag)
-
-		if abs_r_mag >=-20. and index_20subsample == 0:
-			print("Setting index! SS20: %.3f " % abs_r_mag)
-			index_20subsample = current_index
-		if abs_r_mag >=-19. and index_19subsample == 0:
-			print("Setting index! SS19: %.3f " % abs_r_mag)
-			index_19subsample = current_index
-		if abs_r_mag >=-18. and index_18subsample == 0:
-			print("Setting index! SS18: %.3f " % abs_r_mag)
-			index_18subsample = current_index
-		"""
-
-
-
-
 		"""
 		---------------------------------------
 		# Logic to count the number of blue and red galaxies. 
@@ -294,6 +297,50 @@ with open(datafilename) as fp:
 			g_r_more7p5counter += 1
 		else:
 			g_r_less7p5counter += 1
+
+
+		"""
+		---------------------------------------		
+		#Logic that sets the index cutoff for the three subsample groups
+		---------------------------------------
+		"""
+		if abs_r_mag <= -18 and z_value <= z_lim18:
+			RA_LIST18.append(RA_value)
+			DEC_LIST18.append(DEC_value)
+			z_LIST18.append(z_value)
+			abs_g_mag_LIST18.append(abs_g_mag)
+			abs_r_mag_LIST18.append(abs_r_mag)
+			gr_color_LIST18.append(g_r_color)
+			#Counts the g-r for the limited sample
+			if g_r_color >= 0.75:
+				g_r_more7p5counter18 += 1
+			else:
+				g_r_less7p5counter18 += 1
+
+		if abs_r_mag <= -19 and z_value <= z_lim19:
+			RA_LIST19.append(RA_value)
+			DEC_LIST19.append(DEC_value)
+			z_LIST19.append(z_value)
+			abs_g_mag_LIST19.append(abs_g_mag)
+			abs_r_mag_LIST19.append(abs_r_mag)
+			gr_color_LIST19.append(g_r_color)
+			#Counts the g-r for the limited sample				
+			if g_r_color >= 0.75:
+				g_r_more7p5counter19 += 1
+			else:
+				g_r_less7p5counter19 += 1
+		if abs_r_mag <= -20 and z_value <= z_lim20:
+			RA_LIST20.append(RA_value)
+			DEC_LIST20.append(DEC_value)
+			z_LIST20.append(z_value)
+			abs_g_mag_LIST20.append(abs_g_mag)
+			abs_r_mag_LIST20.append(abs_r_mag)
+			gr_color_LIST20.append(g_r_color)
+			#Counts the g-r for the limited sample
+			if g_r_color >= 0.75:
+				g_r_more7p5counter20 += 1
+			else:
+				g_r_less7p5counter20 += 1
 
 		
 		"""
@@ -310,8 +357,11 @@ with open(datafilename) as fp:
 
 
 """
-#PLOT FUNCTION Calls. { X,  Y}
+----------------------------------------------
+# BEGIN PLOT FUNCTION Calls. { X,  Y}
+----------------------------------------------
 """
+
 #======================================================
 # A.
 #======================================================
@@ -322,14 +372,6 @@ x_data  = RA_LIST
 y_data  = DEC_LIST 
 pointsize = 1
 yflip = False
-
-if len(x_data) != len(y_data):
-	print("ERROR! X and Y DATA LENGTHS ARE DIFFERENT!")
-	print("Length: x_data: %g" % len(x_data))
-	print("Length: y_data: %g" % len(y_data))
-else:
-	print("Length: x_data: %g" % len(x_data))
-	print("Length: y_data: %g" % len(y_data))
 
 pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 
@@ -366,20 +408,14 @@ pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yf
 #======================================================
 
 
+
 #======================================================
 # D.  Volume Limited sample { -20, -19, -18 }
 #======================================================
 #NOTE: THE FOLLOWING ASSUMES THAT THE DATA IS ORDERED ON M_r 
-title_label = "r-band Mag vs. Redshift: -20"
-x_label = "Redshift, z"
-y_label = "M_r"
-x_data  = z_LIST20
-y_data  = abs_r_mag_LIST20
-pointsize = 1
-yflip = True
-
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
+#-------------------------------------------
+# Subsample -18
+#-------------------------------------------
 title_label = "r-band Mag vs. Redshift: -18"
 x_label = "Redshift, z"
 y_label = "M_r"
@@ -387,9 +423,42 @@ x_data  = z_LIST18
 y_data  = abs_r_mag_LIST18
 pointsize = 1
 yflip = True
-
 pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+mag = -18
+print_subsample_info(mag, x_data, g_r_more7p5counter18, g_r_less7p5counter18 )
 
+#-------------------------------------------
+# Subsample -19
+#-------------------------------------------
+title_label = "r-band Mag vs. Redshift: -19"
+x_label = "Redshift, z"
+y_label = "M_r"
+x_data  = z_LIST19
+y_data  = abs_r_mag_LIST19
+pointsize = 1
+yflip = True
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+mag = -19
+print_subsample_info(mag, x_data, g_r_more7p5counter19, g_r_less7p5counter19 )
+
+#-------------------------------------------
+# Subsample -20
+#-------------------------------------------
+title_label = "r-band Mag vs. Redshift: -20"
+x_label = "Redshift, z"
+y_label = "M_r"
+x_data  = z_LIST20
+y_data  = abs_r_mag_LIST20
+pointsize = 1
+yflip = True
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+mag = -20
+print_subsample_info(mag, x_data, g_r_more7p5counter20, g_r_less7p5counter20)
+
+#print("M_r < -20:  \n ===============================\n")
+#print("The Redshift bounds are: [ %.4f --> %.4f ] " % (min(x_data) , max(x_data)))
+#print("The Volume is:             %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_data)))
+#print("The Red Blue Fraction is: %.3f" %  get_bluefr(g_r_more7p5counter20, g_r_less7p5counter20))
 
 
 #======================================================
@@ -411,7 +480,22 @@ pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yf
 """
 
 
-print("END. No more things to do for the CPU!")
+title_label = "TEST PLOT"
+x_label = "x"
+y_label = "y"
+x_data  = abs_r_mag_LIST
+y_data  = np.linspace(1,len(abs_r_mag_LIST), len(abs_r_mag_LIST))
+pointsize = 1
+yflip = True
+
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+
+
+
+
+print("\nEND. No more things to do for the CPU!")
+
+
 
 
 
