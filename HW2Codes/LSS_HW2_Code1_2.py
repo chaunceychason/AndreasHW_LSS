@@ -15,8 +15,12 @@ import matplotlib.pyplot as plt
 def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	print("Entered Basic Plot Function")
 	
-	if len(x_data) != len(y_data):
+	if len(xlist) != len(ylist):
 		print("ERROR! X and Y DATA LENGTHS ARE DIFFERENT!")
+		print("Length: x_data: %g" % len(x_data))
+		print("Length: y_data: %g" % len(y_data))
+	if len(xlist)==0 or len(ylist)==0:
+		print("ERROR: list length is ZERO!")
 		print("Length: x_data: %g" % len(x_data))
 		print("Length: y_data: %g" % len(y_data))
 	else:
@@ -51,8 +55,10 @@ def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	#plt.yscale("log")
 	
 	if yflip == True:
-		plt.ylim(max(ylist), min(ylist))
-
+		try:
+			plt.ylim(max(ylist), min(ylist))
+		except:
+			print("uh.oh.... try except statement. check ylim.")
 	#plt.savefig(figure_name)
 	#print("Saving plot: %s" % figure_name)
 	print
@@ -150,7 +156,10 @@ F.  - i. Make a plot of the luminosity function using the full flux-
 NOTES:
 	**********     NOTE: FIXED!   ***********
 	# 
-	#  FIX:  USE {sort -k 4,4n filename > newfilename.} instead. 
+	#  USE:  {sort -k 4,4n filename > newfilename.} instead. 
+	#
+	#  TO FIND z:  sort -k4,4 -k3,3 SDSS_DR7.dat |  awk '{ if ($4 == "-19.00") print $0 }' 
+	#
 	#
 	# * For part D, while trying to create a volume limited sample I 
 	# 	attempted to sort the datafile by the 4th column (M_r) to 
@@ -173,9 +182,9 @@ NOTES:
 #Sets the datafile name for opening
 #-----------------------------------
 #datafilename = "./SDSS_DR7.dat"
-#datafilename = "./SDSS_DR7sortedC.dat"  #Sorted based on M_r (most negative last) 
-datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
+#datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
+datafilename = "./SDSS_DR7.dat"
 ordered_file = True
 
 """
@@ -221,7 +230,8 @@ Sets the volume limiting redshift, from:
 -19: 123.533843  48.703091 0.13640  -19.00 -20.95
 -18: 57.696922   -5.360849 0.07342  -18.00 -19.16
 """
-z_lim20=0.16635 
+#z_lim20=0.16635 
+z_lim20=0.15676
 z_lim19=0.13640
 z_lim18=0.07342
 
@@ -278,8 +288,8 @@ with open(datafilename) as fp:
 		RA_value   = float(splitline[0])        #Sets RA
 		DEC_value  = float(splitline[1])		#Sets Dec
 		z_value    = float(splitline[2])		#Sets  z
-		abs_g_mag  = float(splitline[3])		#Sets  g-band mag
-		abs_r_mag  = float(splitline[4])		#Sets  r-band mag
+		abs_r_mag  = float(splitline[3])		#Sets  r-band mag
+		abs_g_mag  = float(splitline[4])		#Sets  g-band mag
 
 		"""
 		---------------------------------------
@@ -298,13 +308,16 @@ with open(datafilename) as fp:
 		else:
 			g_r_less7p5counter += 1
 
+		if z_value > 0. and abs_r_mag == -20.:
+			print("Entering test loop: z > 0.15 and Mr=-20")
+
 
 		"""
 		---------------------------------------		
 		#Logic that sets the index cutoff for the three subsample groups
 		---------------------------------------
 		"""
-		if abs_r_mag <= -18 and z_value <= z_lim18:
+		if ((abs_r_mag <= -18.0) and (z_value <= z_lim18)):
 			RA_LIST18.append(RA_value)
 			DEC_LIST18.append(DEC_value)
 			z_LIST18.append(z_value)
@@ -317,7 +330,7 @@ with open(datafilename) as fp:
 			else:
 				g_r_less7p5counter18 += 1
 
-		if abs_r_mag <= -19 and z_value <= z_lim19:
+		if ((abs_r_mag <= -19.0) and (z_value <= z_lim19)):
 			RA_LIST19.append(RA_value)
 			DEC_LIST19.append(DEC_value)
 			z_LIST19.append(z_value)
@@ -329,7 +342,8 @@ with open(datafilename) as fp:
 				g_r_more7p5counter19 += 1
 			else:
 				g_r_less7p5counter19 += 1
-		if abs_r_mag <= -20 and z_value <= z_lim20:
+		if ((abs_r_mag <= -20.0) and (z_value <= z_lim20)):
+			#if (abs_r_mag == -20.00 or abs_r_mag == -20.01) and (z_value <= z_lim20):
 			RA_LIST20.append(RA_value)
 			DEC_LIST20.append(DEC_value)
 			z_LIST20.append(z_value)
@@ -373,7 +387,7 @@ y_data  = DEC_LIST
 pointsize = 1
 yflip = False
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+#pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 
 #======================================================
 # A. part II - M_r vs. Redshift
@@ -386,8 +400,9 @@ y_data  = abs_r_mag_LIST
 pointsize = 1
 yflip = True
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
+#pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+x_data[:] = []
+y_data[:] = []
 #======================================================
 # B. Color Distribution of Galaxies
 #======================================================
@@ -401,8 +416,9 @@ yflip = True
 
 print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
 print("There were %s  RED  galaxies!" % g_r_more7p5counter)
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
+#pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+x_data[:] = []
+y_data[:] = []
 #======================================================
 # C.  r-band luminosity function
 #======================================================
@@ -423,9 +439,13 @@ x_data  = z_LIST18
 y_data  = abs_r_mag_LIST18
 pointsize = 1
 yflip = True
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 mag = -18
 print_subsample_info(mag, x_data, g_r_more7p5counter18, g_r_less7p5counter18 )
+
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+
+x_data[:] = []
+y_data[:] = []
 
 #-------------------------------------------
 # Subsample -19
@@ -437,10 +457,13 @@ x_data  = z_LIST19
 y_data  = abs_r_mag_LIST19
 pointsize = 1
 yflip = True
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 mag = -19
 print_subsample_info(mag, x_data, g_r_more7p5counter19, g_r_less7p5counter19 )
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 
+
+x_data[:] = []
+y_data[:] = []
 #-------------------------------------------
 # Subsample -20
 #-------------------------------------------
@@ -448,19 +471,23 @@ title_label = "r-band Mag vs. Redshift: -20"
 x_label = "Redshift, z"
 y_label = "M_r"
 x_data  = z_LIST20
+#print abs_r_mag_LIST20
 y_data  = abs_r_mag_LIST20
 pointsize = 1
 yflip = True
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
 mag = -20
 print_subsample_info(mag, x_data, g_r_more7p5counter20, g_r_less7p5counter20)
+print("MAX z value of z_LIST20: %.4f " % max(z_LIST20) )
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+
 
 #print("M_r < -20:  \n ===============================\n")
 #print("The Redshift bounds are: [ %.4f --> %.4f ] " % (min(x_data) , max(x_data)))
 #print("The Volume is:             %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_data)))
 #print("The Red Blue Fraction is: %.3f" %  get_bluefr(g_r_more7p5counter20, g_r_less7p5counter20))
 
-
+x_data[:] = []
+y_data[:] = []
 #======================================================
 # E.  Luminosity Function of 3 Volume limited samples
 #======================================================
@@ -479,17 +506,17 @@ pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yf
 
 """
 
-
+"""
 title_label = "TEST PLOT"
 x_label = "x"
 y_label = "y"
-x_data  = abs_r_mag_LIST
-y_data  = np.linspace(1,len(abs_r_mag_LIST), len(abs_r_mag_LIST))
+y_data  = abs_r_mag_LIST
+x_data  = np.linspace(1,len(abs_r_mag_LIST), len(abs_r_mag_LIST))
 pointsize = 1
 yflip = True
 
 pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
+"""
 
 
 

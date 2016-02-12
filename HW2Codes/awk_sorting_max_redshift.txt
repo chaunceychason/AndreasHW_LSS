@@ -1,11 +1,15 @@
 #This simple awk script can be used to find lines of the file matching a certain M_r
 #and then, inefficently piping to another awk to find the maximum redshift for that.
 
+#WORKING: 
+sort -k4,4 -k3,3 SDSS_DR7condensed.dat |  awk '{ if ($4 == "-20.00") print $0 }' 
 
+#SEMI-BROKEN:
 awk '$4 == -20.00' SDSS_DR7sortedC.dat | awk 
     'NR == 1 {line = $0; max $3} NR > 1 && $3 > max 
     {line = $0; max = $3}END{print line}' 
 
+#EXAMPLE:
 awk '$4 == mag_limit' SDSS_DR7sortedC.dat | awk 
     'NR == 1 {line = $0; max $3} NR > 1 && $3 > max 
     {line = $0; max = $3}END{print line}' 
