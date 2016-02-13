@@ -67,7 +67,7 @@ def plot_basic( xlist, ylist, title, xlab, ylab, legend_val, psize, yflip ,  pco
 	return dummy
 
 
-def plot_hist( xlist, num_of_bins, title, xlab, ylab, pcounter):
+def plot_hist( xlist, num_of_bins, title, xlab, ylab, log_y, pcounter):
 	print("Entered HISTOGRAM Plot Function")
 	
 	plot_title=" Blank Title "   
@@ -94,7 +94,9 @@ def plot_hist( xlist, num_of_bins, title, xlab, ylab, pcounter):
 	plt.xlabel(x_axis)
 	plt.ylabel(y_axis)
 	#plt.yscale("log")
-	
+	if log_y != 0:
+		plt.yscale('log', nonposy='clip')
+
 	#plt.savefig(figure_name)
 	#print("Saving plot: %s" % figure_name)
 	print
@@ -270,9 +272,9 @@ Sets the volume limiting redshift, from:
 #z_lim20=0.16635 
 #Note: These are ~roughly~ based on the last star at that mag. 
 #Some liberal rounding. 
-z_lim20=0.157
-z_lim19=0.125
-z_lim18=0.075
+z_lim20=0.10696
+z_lim19=0.0706
+z_lim18=0.0457
 
 with open(datafilename) as fp:
 
@@ -327,8 +329,8 @@ with open(datafilename) as fp:
 		RA_value   = float(splitline[0])        #Sets RA
 		DEC_value  = float(splitline[1])		#Sets Dec
 		z_value    = float(splitline[2])		#Sets  z
-		abs_r_mag  = float(splitline[3])		#Sets  r-band mag
-		abs_g_mag  = float(splitline[4])		#Sets  g-band mag
+		abs_g_mag  = float(splitline[3])		#Sets  r-band mag
+		abs_r_mag  = float(splitline[4])		#Sets  g-band mag
 
 		"""
 		---------------------------------------
@@ -449,18 +451,19 @@ y_label = "# of galaxies / bin of color; d_color = 0.1 "
 
 x_data  = "gr_color_LIST" 
 color_binwidth = 0.1 
-max_bin = 2.0
-min_bin = -3.0
+max_bin = 3.0
+min_bin = -2.0
 num_of_bins  =  int((max_bin - min_bin) / color_binwidth)
 print("Number of bins: %d" % num_of_bins)
 pointsize = 1
 yflip = True
+log_y_bool = 1
 
 print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
 print("There were %s  RED  galaxies!" % g_r_more7p5counter)
-
+hist_bins = np.arange(min_bin, max_bin+0.01, color_binwidth)
 #pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-pcount = plot_hist(gr_color_LIST, num_of_bins, title_label, x_label, y_label,  pcount)
+pcount = plot_hist(gr_color_LIST, hist_bins, title_label, x_label, y_label, log_y_bool,  pcount)
 #======================================================
 # C.  r-band luminosity function
 #======================================================
@@ -468,19 +471,23 @@ z_median_depth = 0.1
 M_binwidth     = 0.1
 #Note: Should redesign this not to design bin width based on points. 
 #num_of_bins    = abs(min(abs_r_mag)) - abs(max(abs_r_mag))/ M_binwidth
-max_bin = -17.
-min_bin = -25.
+max_bin = -10.
+min_bin = -29.
 num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
 print("Number of bins: %d" % num_of_bins)
 #np.histogram(abs_r_mag, bins=num_of_bins)
 title_label = "r-band Magnitude Histogram"
 x_label = "r-band Magnitude"
 #Note: Flag, make y-axis in log density.
-y_label = "dn/dMr"
-
-print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % get_volume(z_median_depth))
-
-pcount = plot_hist(abs_r_mag_LIST, num_of_bins, title_label, x_label, y_label,  pcount)
+y_label = "dn/dMr dV  [h^-3 Mpc^3]"
+log_y_bool = 1
+#Gets the Volume of the sample (median)
+da_volume = get_volume(z_median_depth)
+#Computes dn/dM per Mpc^3 
+x_dataLIST = np.array(abs_r_mag_LIST)/(da_volume)
+print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
+hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
+pcount = plot_hist(abs_r_mag_LIST, hist_bins, title_label, x_label, y_label, log_y_bool,  pcount)
 
 #======================================================
 # D.  Volume Limited sample { -20, -19, -18 }
