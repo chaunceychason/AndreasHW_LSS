@@ -1,0 +1,71 @@
+
+		CONGRATS!
+Successfully opened ./SDSS_DR7.dat ...
+Entered Basic Plot Function
+Length: x_data: 550166
+Length: y_data: 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot1.png
+Entered Basic Plot Function
+Length: x_data: 550166
+Length: y_data: 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot2.png
+Number of bins: 50
+There were 550120  BLUE galaxies!
+There were 46  RED  galaxies!
+Entered HISTOGRAM Plot Function
+==========================
+type <type 'list'>
+len 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot3.png
+Number of bins: 80
+The Volume is  : 19639366.8750 [(h^-1 Mpc)^3].
+Entered HISTOGRAM Plot Function
+==========================
+type <type 'list'>
+len 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot4.png
+==================
+M_r < -18:  
+=====================
+The Redshift bounds   :[ 0.0036 --> 0.0750 ] 
+The Volume is         : 8285357.9004 [(h^-1 Mpc)^3].
+The # of Red Galaxies : 7 
+The # of Blue Galaxies: 139876 
+The Blue Fraction     : 1.000
+Entered Basic Plot Function
+Length: x_data: 139883
+Length: y_data: 139883
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot5.png
+==================
+M_r < -19:  
+=====================
+The Redshift bounds   :[ 0.0048 --> 0.1250 ] 
+The Volume is         : 38358138.4277 [(h^-1 Mpc)^3].
+The # of Red Galaxies : 13 
+The # of Blue Galaxies: 239565 
+The Blue Fraction     : 1.000
+Entered Basic Plot Function
+Length: x_data: 239578
+Length: y_data: 239578
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot6.png
+==================
+M_r < -20:  
+=====================
+The Redshift bounds   :[ 0.0130 --> 0.1570 ] 
+The Volume is         : 76002248.3940 [(h^-1 Mpc)^3].
+The # of Red Galaxies : 26 
+The # of Blue Galaxies: 128186 
+The Blue Fraction     : 1.000
+Entered Basic Plot Function
+Length: x_data: 128212
+Length: y_data: 128212
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot7.png
+
+END. No more things to do for the CPU!

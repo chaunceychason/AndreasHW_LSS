@@ -6,20 +6,23 @@ matplotlib.use( 'Agg' )
 import matplotlib.pyplot as plt
 
 
-def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
+def plot_basic( xlist, ylist, title, xlab, ylab, legend_val, psize, yflip ,  pcounter):
 	print("Entered Basic Plot Function")
 	
 	if len(xlist) != len(ylist):
 		print("ERROR! X and Y DATA LENGTHS ARE DIFFERENT!")
-		print("Length: x_data: %g" % len(x_data))
-		print("Length: y_data: %g" % len(y_data))
+		print("Length: x_data: %g" % len(xlist))
+		print("Length: y_data: %g" % len(ylist))
 	if len(xlist)==0 or len(ylist)==0:
 		print("ERROR: list length is ZERO!")
-		print("Length: x_data: %g" % len(x_data))
-		print("Length: y_data: %g" % len(y_data))
+		print("Length: x_data: %g" % len(xlist))
+		print("Length: y_data: %g" % len(ylist))
 	else:
-		print("Length: x_data: %g" % len(x_data))
-		print("Length: y_data: %g" % len(y_data))
+		print("Length: x_data: %g" % len(xlist))
+		print("Length: y_data: %g" % len(ylist))
+
+	if legend_val != 0:
+		pass
 
 	plot_title=" Blank Title "   
 	x_axis="Blank X"
@@ -64,21 +67,28 @@ def plot_basic( xlist, ylist, title, xlab, ylab, psize, yflip, pcounter):
 	return dummy
 
 
-def plot_hist( xlist, num_of_bins, title, xlab, ylab, psize, yflip, pcounter):
+def plot_hist( xlist, num_of_bins, title, xlab, ylab, pcounter):
 	print("Entered HISTOGRAM Plot Function")
 	
 	plot_title=" Blank Title "   
 	x_axis="Blank X"
 	y_axis="Blank Y"
-	pointsize = 5
+	
+
+	#print xlist
+	print("==========================")
+	print("type " + str(type(xlist)))
+	print("len " + str(len(xlist)))
 
 	if True:
 		plot_title = title
 		x_axis = xlab
 		y_axis = ylab
- 		pointsize = psize
+ 		
 
-	plt.hist(xlist, bins=num_of_bins, color='blue')
+	plt.hist(xlist, bins=num_of_bins)
+	
+	#plt.hist(xlist)
 	
 	plt.title(plot_title)
 	plt.xlabel(x_axis)
@@ -121,13 +131,13 @@ def get_bluefr(red, blue):
 	blue_fraction =  blue / (1.0*red + 1.0*blue)
 	return blue_fraction
 
-def print_subsample_info(mag, x_data, red, blue ):
-	print("==================\nM_r < -%d:  \n=====================" % abs(mag))
-	print("The Redshift bounds   :[ %.4f --> %.4f ] " % (min(x_data) , max(x_data)))
-	print("The Volume is         : %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_data)))
-	print("The # of Red Galaxies : %d " % red)
-	print("The # of Blue Galaxies: %d " % blue)
-	print("The Blue Fraction     : %.3f" % get_bluefr(red, blue))
+def print_subsample_info(maginfo, x_datainfo, redinfo, blueinfo ):
+	print("==================\nM_r < -%d:  \n=====================" % abs(maginfo))
+	print("The Redshift bounds   :[ %.4f --> %.4f ] " % (min(x_datainfo) , max(x_datainfo)))
+	print("The Volume is         : %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_datainfo)))
+	print("The # of Red Galaxies : %d " % redinfo)
+	print("The # of Blue Galaxies: %d " % blueinfo)
+	print("The Blue Fraction     : %.3f" % get_bluefr(redinfo, blueinfo))
 	return True
 
 def checkcondition(condition1, condition2):
@@ -207,9 +217,9 @@ NOTES:
 #-----------------------------------
 #Sets the datafile name for opening
 #-----------------------------------
-#datafilename = "./SDSS_DR7.dat"
+datafilename = "./SDSS_DR7.dat"
 #datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
-datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
+#datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7.dat"
 ordered_file = True
 
@@ -224,6 +234,7 @@ Note: Each row contains infomation for a single galaxy.
 ----------------------------------------------------------------
 """
 if os.path.exists(datafilename):
+	print("\n\t\tCONGRATS!\nSuccessfully opened %s ..." % datafilename)
 	pass
 else:
 	print("os.path.exists says: FILE DOES NOT EXIST....")
@@ -257,9 +268,11 @@ Sets the volume limiting redshift, from:
 -18: 57.696922   -5.360849 0.07342  -18.00 -19.16
 """
 #z_lim20=0.16635 
-z_lim20=0.15676
-z_lim19=0.13640
-z_lim18=0.07342
+#Note: These are ~roughly~ based on the last star at that mag. 
+#Some liberal rounding. 
+z_lim20=0.157
+z_lim19=0.125
+z_lim18=0.075
 
 with open(datafilename) as fp:
 
@@ -405,12 +418,14 @@ with open(datafilename) as fp:
 title_label = "DEC vs. RA: FULL DR7"
 x_label = "RA"
 y_label = "DEC"
-x_data  = RA_LIST
-y_data  = DEC_LIST 
+x_data  = "RA_LIST"
+y_data  = "DEC_LIST" 
+legend_val = 0
 pointsize = 1
 yflip = False
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+pcount = plot_basic(RA_LIST, DEC_LIST, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+
 
 #======================================================
 # A. part II - M_r vs. Redshift
@@ -418,49 +433,54 @@ pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yf
 title_label = "r-band Mag vs. Redshift"
 x_label = "Redshift, z"
 y_label = "M_r"
-x_data  = z_LIST
-y_data  = abs_r_mag_LIST
+x_data  = "z_LIST"
+y_data  = "abs_r_mag_LIST"
+legend_val = 0
 pointsize = 1
 yflip = True
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-x_data[:] = []
-y_data[:] = []
+pcount = plot_basic(z_LIST, abs_r_mag_LIST, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 #======================================================
 # B. Color Distribution of Galaxies
 #======================================================
 title_label = "g-r Color Distribution of galaxies"
-x_label = "Redshift, z"
-y_label = "g-r color"
-x_data  = gr_color_LIST
-y_data  = z_LIST
+x_label = "g-r color"
+y_label = "# of galaxies / bin of color; d_color = 0.1 "
+
+x_data  = "gr_color_LIST" 
+color_binwidth = 0.1 
+max_bin = 2.0
+min_bin = -3.0
+num_of_bins  =  int((max_bin - min_bin) / color_binwidth)
+print("Number of bins: %d" % num_of_bins)
 pointsize = 1
 yflip = True
 
 print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
 print("There were %s  RED  galaxies!" % g_r_more7p5counter)
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-x_data[:] = []
-y_data[:] = []
+
+#pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+pcount = plot_hist(gr_color_LIST, num_of_bins, title_label, x_label, y_label,  pcount)
 #======================================================
 # C.  r-band luminosity function
 #======================================================
 z_median_depth = 0.1
 M_binwidth     = 0.1
-num_of_bins    = abs(min(abs_r_mag)) - abs(max(abs_r_mag))/ M_binwidth
+#Note: Should redesign this not to design bin width based on points. 
+#num_of_bins    = abs(min(abs_r_mag)) - abs(max(abs_r_mag))/ M_binwidth
+max_bin = -17.
+min_bin = -25.
+num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+print("Number of bins: %d" % num_of_bins)
 #np.histogram(abs_r_mag, bins=num_of_bins)
-title_label = "Histogram"
+title_label = "r-band Magnitude Histogram"
 x_label = "r-band Magnitude"
 #Note: Flag, make y-axis in log density.
 y_label = "dn/dMr"
-x_data  = abs_r_mag
-pointsize = 1
-yflip = False
 
-pcount = plot_hist(x_data, num_of_bins, title_label, x_label, y_label, pointsize, yflip, pcount)
+print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % get_volume(z_median_depth))
 
-
-
+pcount = plot_hist(abs_r_mag_LIST, num_of_bins, title_label, x_label, y_label,  pcount)
 
 #======================================================
 # D.  Volume Limited sample { -20, -19, -18 }
@@ -472,17 +492,15 @@ pcount = plot_hist(x_data, num_of_bins, title_label, x_label, y_label, pointsize
 title_label = "r-band Mag vs. Redshift: -18"
 x_label = "Redshift, z"
 y_label = "M_r"
-x_data  = z_LIST18
-y_data  = abs_r_mag_LIST18
+x_data  = "z_LIST18"
+y_data  = "abs_r_mag_LIST18"
 pointsize = 1
+legend_val = 0
 yflip = True
 mag = -18
-print_subsample_info(mag, x_data, g_r_more7p5counter18, g_r_less7p5counter18 )
+print_subsample_info(mag, z_LIST18, g_r_more7p5counter18, g_r_less7p5counter18 )
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
-x_data[:] = []
-y_data[:] = []
+pcount = plot_basic(z_LIST18, abs_r_mag_LIST18, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 
 #-------------------------------------------
 # Subsample -19
@@ -490,37 +508,29 @@ y_data[:] = []
 title_label = "r-band Mag vs. Redshift: -19"
 x_label = "Redshift, z"
 y_label = "M_r"
-x_data  = z_LIST19
-y_data  = abs_r_mag_LIST19
+x_data  = "z_LIST19"
+y_data  = "abs_r_mag_LIST19"
 pointsize = 1
+legend_val = 0
 yflip = True
 mag = -19
-print_subsample_info(mag, x_data, g_r_more7p5counter19, g_r_less7p5counter19 )
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+print_subsample_info(mag, z_LIST19, g_r_more7p5counter19, g_r_less7p5counter19 )
+pcount = plot_basic(z_LIST19, abs_r_mag_LIST19, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 
-
-x_data[:] = []
-y_data[:] = []
 #-------------------------------------------
 # Subsample -20
 #-------------------------------------------
 title_label = "r-band Mag vs. Redshift: -20"
 x_label = "Redshift, z"
 y_label = "M_r"
-x_data  = z_LIST20
-#print abs_r_mag_LIST20
-y_data  = abs_r_mag_LIST20
+x_data  = "z_LIST20"
+y_data  = "abs_r_mag_LIST20"
 pointsize = 1
+legend_val = 0
 yflip = True
 mag = -20
-print_subsample_info(mag, x_data, g_r_more7p5counter20, g_r_less7p5counter20)
-#print("MAX z value of z_LIST20: %.4f " % max(z_LIST20) )
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
-
-
-
-x_data[:] = []
-y_data[:] = []
+print_subsample_info(mag, z_LIST20, g_r_more7p5counter20, g_r_less7p5counter20)
+pcount = plot_basic(z_LIST20, abs_r_mag_LIST20, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 #======================================================
 # E.  Luminosity Function of 3 Volume limited samples
 #======================================================
@@ -535,7 +545,7 @@ yflip = True
 
 print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
 print("There were %s  RED  galaxies!" % g_r_more7p5counter)
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 
 """
 
@@ -548,7 +558,7 @@ x_data  = np.linspace(1,len(abs_r_mag_LIST), len(abs_r_mag_LIST))
 pointsize = 1
 yflip = True
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label, pointsize, yflip, pcount)
+pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
 """
 
 
