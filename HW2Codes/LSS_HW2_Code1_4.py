@@ -109,6 +109,15 @@ def plot_hist( xlist, num_of_bins, hist_weights, title, xlab, ylab, log_y, pcoun
 	dummy = pcounter + 1
 	return dummy
 
+def find_z_max_given_M( Mag_list, z_list,  M_r ):
+	z_Max = 0 
+	#Enumerate the redshifts. 
+	for i, x, in enumerate(z_LIST):
+		#Find the Max redshift for a given M_r
+		if Mag_list[i] == M_r and z_Max < x:
+			z_Max = x  
+	return z_Max
+
 def get_volume(max_z):
 	#This volume uses max_redshift (max_z) to compute volume: 
 	#	Note: Uses max_z, instead of median since it is a volume limited, instead of flux-lim. 
@@ -219,7 +228,7 @@ NOTES:
 #-----------------------------------
 #Sets the datafile name for opening
 #-----------------------------------
-datafilename = "./SDSS_DR7.dat"
+datafilename = "./SDSS_DR7ordered.dat"
 #datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7.dat"
@@ -480,8 +489,7 @@ print("Number of bins: %d" % num_of_bins)
 #np.histogram(abs_r_mag, bins=num_of_bins)
 title_label = "r-band Magnitude Histogram"
 x_label = "r-band Magnitude"
-#Note: Flag, make y-axis in log density.
-y_label = "dn/dMr "
+y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
 log_y_bool = 1
 
 #Gets the Volume of the sample (median)
@@ -547,37 +555,89 @@ pcount = plot_basic(z_LIST20, abs_r_mag_LIST20, title_label, x_label, y_label,  
 #======================================================
 # E.  Luminosity Function of 3 Volume limited samples
 #======================================================
-"""
-title_label = "Luminosity Function"
-x_label = "x"
-y_label = "y"
-x_data  = gr_color_LIST
-y_data  = z_LIST
-pointsize = 1
-yflip = True
+master_LFLIST = []
+z_median_depth = 0.1
+M_binwidth     = 0.1
+#Note: Should redesign this not to design bin width based on points. 
+max_bin = -17.
+min_bin = -25.
+#num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+#print("Number of bins: %d" % num_of_bins)
+title_label = "Total Volume Limited r-band Mag L.F."
+x_label = "r-band Magnitude"
+y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
+log_y_bool = 1
 
-print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
-print("There were %s  RED  galaxies!" % g_r_more7p5counter)
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+#Gets the Volume of the sample (median)
+#Computes dn/dM per Mpc^3 
+da_volume = get_volume(z_median_depth)
+da_volume_fr = 1./da_volume
+#Stores the combined lists.
+x_dataLIST = np.array(abs_r_mag_LIST)
+master_LFLIST += abs_r_mag_LIST20
+#Builds the list for the combined Luminosity Function without duplicates
+for i in range(0, len(abs_r_mag_LIST19)):
+	if abs_r_mag_LIST19[i] > -20.:
+		master_LFLIST += [abs_r_mag_LIST19[i]]
+for i in range(0, len(abs_r_mag_LIST18)):
+	if abs_r_mag_LIST18[i] > -19:
+		master_LFLIST += [abs_r_mag_LIST18[i]]
 
-"""
+#Sanity check:
+if (len(abs_r_mag_LIST18)+len(abs_r_mag_LIST19)+ \
+	len(abs_r_mag_LIST20)) <= len(master_LFLIST):
+	print("The lengths of the vol limited samples are strange.")
+else:
+	print("As expected, the master_LFLIST list excludes certain values from r-band 18,19,20.")
 
-"""
-title_label = "TEST PLOT"
-x_label = "x"
-y_label = "y"
-y_data  = abs_r_mag_LIST
-x_data  = np.linspace(1,len(abs_r_mag_LIST), len(abs_r_mag_LIST))
-pointsize = 1
-yflip = True
+print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
+hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
+weights = [ da_volume_fr ] * len(master_LFLIST)
+pcount = plot_hist(master_LFLIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
 
-pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-"""
+
+#======================================================
+# F.  Full Luminosity Function with 1/V_max (per bin) weighting. 
+#======================================================
+#z_median_depth = 0.1
+#z_max_depth = max(z_LIST)
+M_binwidth     = 0.1
+#Note: Should redesign this not to design bin width based on points. 
+max_bin = -10.
+min_bin = -28.
+#num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+#print("Number of bins: %d" % num_of_bins)
+title_label = "Total Flux Limited r-band Mag L.F. Volume Corrected"
+x_label = "r-band Magnitude"
+y_label = "volume corrected dn/dMr dV [units: # h^-3 Mpc^3]"
+log_y_bool = 1
+
+#Gets the Volume of the sample (median)
+#Computes dn/dM per Mpc^3 
+
+#da_volume = get_volume(z_max_depth)
+#da_volume_fr = 1./da_volume
+#Stores the combined lists.
+
+#print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
+hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
+weights = [ 1 ] * len(abs_r_mag_LIST)
+prev_y = 9999
+for j, y in enumerate(abs_r_mag_LIST):
+	if y != prev_y:
+		z_max = find_z_max_given_M(abs_r_mag_LIST, z_LIST, y  )
+		da_volume = get_volume(z_max)
+		da_volume_fr = 1./da_volume
+		prev_y = y
+	else:
+		pass
+	weights[j] = da_volume_fr
+
+pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
 
 
 
 print("\nEND. No more things to do for the CPU!")
-
 
 
 

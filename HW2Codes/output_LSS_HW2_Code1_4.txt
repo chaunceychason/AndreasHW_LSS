@@ -1,6 +1,6 @@
 
 		CONGRATS!
-Successfully opened ./SDSS_DR7.dat ...
+Successfully opened ./SDSS_DR7ordered.dat ...
 Entered Basic Plot Function
 Length: x_data: 550166
 Length: y_data: 550166
@@ -67,5 +67,19 @@ Length: x_data: 134416
 Length: y_data: 134416
 
 Saving plot: /home/chasonn/Feb9LSSHW2_plot7.png
+As expected, the master_LFLIST list excludes certain values from r-band 18,19,20.
+The Volume is  : 19639366.8750 [(h^-1 Mpc)^3].
+Entered HISTOGRAM Plot Function
+==========================
+type <type 'list'>
+len 218610
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot8.png
+Entered HISTOGRAM Plot Function
+==========================
+type <type 'list'>
+len 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot9.png
 
 END. No more things to do for the CPU!
