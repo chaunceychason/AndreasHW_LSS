@@ -31,14 +31,14 @@ def plot_basic( xlist, ylist, title, xlab, ylab, legend_val, psize, yflip ,  pco
 	#figure_name=os.path.expanduser('~/Feb9LSSHW2_plot1_A' +'.png')
 	#figure_name=os.path.expanduser('~/Feb9LSSHW2_plot1_A' +'.png')
 	#Choose which type of plot you would like: Commented out.
-	
+
+	#sets new plot features from call. 	
 	if True:
 		plot_title = title
 		x_axis = xlab
 		y_axis = ylab
  		pointsize = psize
 
-	
 	#plt.plot(xlist, ylist)
 	#plt.plot(xlist, ylist, linestyle="", marker="o", markeredgecolor=None, markeredgewidth=0.0)
 	#plt.plot(scale1, Vmaxarray, linestyle="-", marker="o")
@@ -67,7 +67,7 @@ def plot_basic( xlist, ylist, title, xlab, ylab, legend_val, psize, yflip ,  pco
 	return dummy
 
 
-def plot_hist( xlist, num_of_bins, hist_weights, title, xlab, ylab, log_y, pcounter):
+def plot_hist( xlist, num_of_bins, hist_weights, title, xlab, ylab, pltlab, log_y, alpha_value, pcounter):
 	print("Entered HISTOGRAM Plot Function")
 	
 	plot_title=" Blank Title "   
@@ -86,10 +86,10 @@ def plot_hist( xlist, num_of_bins, hist_weights, title, xlab, ylab, log_y, pcoun
 		y_axis = ylab
  		
 
-	plt.hist(xlist, bins=num_of_bins, weights=hist_weights)
-	
-	#plt.hist(xlist)
-	
+	plt.hist(xlist, bins=num_of_bins, weights=hist_weights, alpha=alpha_value, label=pltlab)
+	if pltlab != '':
+		plt.legend()
+
 	plt.title(plot_title)
 	plt.xlabel(x_axis)
 	plt.ylabel(y_axis)
@@ -97,15 +97,13 @@ def plot_hist( xlist, num_of_bins, hist_weights, title, xlab, ylab, log_y, pcoun
 	if log_y != 0:
 		plt.yscale('log', nonposy='clip')
 
-	#plt.savefig(figure_name)
-	#print("Saving plot: %s" % figure_name)
 	print
 	
 	figure_name=os.path.expanduser('~/Feb9LSSHW2_plot%s.png' % pcount)
 	plt.savefig(figure_name)
 	print("Saving plot: %s" % figure_name)
 	plt.clf()
-
+	#Tracks plot number to assign unique name. 
 	dummy = pcounter + 1
 	return dummy
 
@@ -145,10 +143,11 @@ def get_bluefr(red, blue):
 def print_subsample_info(maginfo, x_datainfo, redinfo, blueinfo ):
 	print("==================\nM_r < -%d:  \n=====================" % abs(maginfo))
 	print("The Redshift bounds   :[ %.4f --> %.4f ] " % (min(x_datainfo) , max(x_datainfo)))
-	print("The Volume is         : %.4f [(h^-1 Mpc)^3]." % get_volume(max(x_datainfo)))
-	print("The # of Red Galaxies : %d " % redinfo)
-	print("The # of Blue Galaxies: %d " % blueinfo)
-	print("The Blue Fraction     : %.3f" % get_bluefr(redinfo, blueinfo))
+	print("The Volume is         : %.4f [(h^-1 Mpc)^3].\n" % get_volume(max(x_datainfo)))
+	print("The Total # of Galaxies: %d " % (redinfo+blueinfo))
+	print("The # of Red Galaxies  : %d " % redinfo)
+	print("The # of Blue Galaxies : %d " % blueinfo)
+	print("The Blue Fraction      : %.3f" % get_bluefr(redinfo, blueinfo))
 	return True
 
 def checkcondition(condition1, condition2):
@@ -196,8 +195,8 @@ E.  - i.  Make a single plot of the luminosity function meausured from
 			the three volume-limited samples from D. 
 
 F.  - i. Make a plot of the luminosity function using the full flux-
-			limited sample, applying a 1/V_max weight. How does the
-			weighting change the LF? 
+			limited sample, applying a 1/V_max weight (for each mag.)
+			How does the weighting change the LF? 
 
 
 NOTES:
@@ -208,15 +207,6 @@ NOTES:
 	#  TO FIND z:  sort -k4,4 -k3,3 SDSS_DR7.dat |  awk '{ if ($4 == "-19.00") print $0 }' 
 	#
 	#
-	# * For part D, while trying to create a volume limited sample I 
-	# 	attempted to sort the datafile by the 4th column (M_r) to 
-	# 	speed up the data processing time. I did this using a bash 
-	# 	command: { sort -k 4 SDSS_DR7.dat > SDSS_DR7sorted.dat } as
-	# 	well as {sort -k 4,4 SDSS_DR7.dat > SDSS_DR7sorted.dat }. 
-	# 	Both times, I noticed that it properly sorted for all but the
-	# 	final two rows. They have been removed from the sample...
-		
-	# 	Lines Removed:
 	# 	---------------------------------------------------- 
 	# 	>	***	192.804726  47.070860 0.00183   -9.18 -11.41 
 	# 	>	***	186.474874  33.539617 0.00104   -9.76 -10.00 
@@ -228,8 +218,8 @@ NOTES:
 #-----------------------------------
 #Sets the datafile name for opening
 #-----------------------------------
-datafilename = "./SDSS_DR7ordered.dat"
-#datafilename = "./SDSS_DR7stable.dat"  #Sorted based on M_r (most negative last) 
+datafilename = "./SDSS_DR7ordered.dat"     #An ordered version to save computation. 
+#datafilename = "./SDSS_DR7stable.dat"     #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7condensed.dat"  #Sorted based on M_r (most negative last) 
 #datafilename = "./SDSS_DR7.dat"
 ordered_file = True
@@ -278,7 +268,6 @@ Sets the volume limiting redshift, from:
 -19: 123.533843  48.703091 0.13640  -19.00 -20.95
 -18: 57.696922   -5.360849 0.07342  -18.00 -19.16
 """
-#z_lim20=0.16635 
 #Note: These are ~roughly~ based on the last star at that mag. 
 #Some liberal rounding. 
 z_lim20=0.10696
@@ -294,10 +283,7 @@ with open(datafilename) as fp:
 	abs_g_mag_LIST  = []	
 	abs_r_mag_LIST  = []	
 	gr_color_LIST   = []
-	#n20subsample_indexes = []
-	#n19subsample_indexes = []
-	#n18subsample_indexes = []
-
+	
 	RA_LIST20   = []      
 	DEC_LIST20  = []		
 	z_LIST20    = []		
@@ -321,14 +307,15 @@ with open(datafilename) as fp:
 
 	for line in fp:
 		current_index += 1
+		"""
 		if checkcondition(condition1, condition2) == False:
 			print("Condition FALSE.")
 			break
 		else:
 			pass		#Do nothing. Continue on with code. 
+		"""
 
-
-		splitline = line.split()  #Divide the non-hashed data into splitline.
+		splitline = line.split()  #Divide the non-hashed data into splitline.		
 		
 		"""
 		---------------------------------------
@@ -454,12 +441,13 @@ pcount = plot_basic(z_LIST, abs_r_mag_LIST, title_label, x_label, y_label,  lege
 #======================================================
 # B. Color Distribution of Galaxies
 #======================================================
-title_label = "g-r Color Distribution of galaxies"
+title_label = "g-r Color Distribution of galaxies in LOG"
 x_label = "g-r color"
 y_label = "# of galaxies / bin of color; d_color = 0.1 "
+pltlabel = 'g-r'
 
 x_data  = "gr_color_LIST" 
-color_binwidth = 0.1 
+color_binwidth = 0.05
 max_bin = 3.0
 min_bin = -2.0
 num_of_bins  =  int((max_bin - min_bin) / color_binwidth)
@@ -467,6 +455,7 @@ print("Number of bins: %d" % num_of_bins)
 pointsize = 1
 yflip = True
 log_y_bool = 1
+halpha=1.0
 
 print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
 print("There were %s  RED  galaxies!" % g_r_more7p5counter)
@@ -474,7 +463,34 @@ hist_bins = np.arange(min_bin, max_bin+0.01, color_binwidth)
 #weights = np.full((1,len(gr_color_LIST)), 1, np.int)
 weights = [1]*len(gr_color_LIST)
 #pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-pcount = plot_hist(gr_color_LIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
+pcount = plot_hist(gr_color_LIST, hist_bins, weights, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
+
+#======================================================
+# B part II (unlogged). Color Distribution of Galaxies
+#======================================================
+title_label = "g-r Color Distribution of galaxies"
+x_label = "g-r color"
+y_label = "# of galaxies / bin of color; d_color = 0.1 "
+pltlabel = 'g-r'
+
+x_data  = "gr_color_LIST" 
+color_binwidth = 0.05
+max_bin = 3.0
+min_bin = -2.0
+num_of_bins  =  int((max_bin - min_bin) / color_binwidth)
+print("Number of bins: %d" % num_of_bins)
+pointsize = 1
+yflip = True
+log_y_bool = 0
+halpha=1.0
+
+print("There were %s  BLUE galaxies!" % g_r_less7p5counter)
+print("There were %s  RED  galaxies!" % g_r_more7p5counter)
+hist_bins = np.arange(min_bin, max_bin+0.01, color_binwidth)
+#weights = np.full((1,len(gr_color_LIST)), 1, np.int)
+weights = [1]*len(gr_color_LIST)
+#pcount = plot_basic(x_data, y_data, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+pcount = plot_hist(gr_color_LIST, hist_bins, weights, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
 #======================================================
 # C.  r-band luminosity function
 #======================================================
@@ -490,6 +506,7 @@ print("Number of bins: %d" % num_of_bins)
 title_label = "r-band Magnitude Histogram"
 x_label = "r-band Magnitude"
 y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
+pltlabel = 'r-band'
 log_y_bool = 1
 
 #Gets the Volume of the sample (median)
@@ -501,7 +518,7 @@ x_dataLIST = np.array(abs_r_mag_LIST)
 print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
 hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
 weights = [ da_volume_fr ] * len(abs_r_mag_LIST)
-pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
+pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
 
 #======================================================
 # D.  Volume Limited sample { -20, -19, -18 }
@@ -520,8 +537,9 @@ legend_val = 0
 yflip = True
 mag = -18
 print_subsample_info(mag, z_LIST18, g_r_more7p5counter18, g_r_less7p5counter18 )
-
+"""
 pcount = plot_basic(z_LIST18, abs_r_mag_LIST18, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+"""
 
 #-------------------------------------------
 # Subsample -19
@@ -536,8 +554,9 @@ legend_val = 0
 yflip = True
 mag = -19
 print_subsample_info(mag, z_LIST19, g_r_more7p5counter19, g_r_less7p5counter19 )
+"""
 pcount = plot_basic(z_LIST19, abs_r_mag_LIST19, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-
+"""
 #-------------------------------------------
 # Subsample -20
 #-------------------------------------------
@@ -551,10 +570,57 @@ legend_val = 0
 yflip = True
 mag = -20
 print_subsample_info(mag, z_LIST20, g_r_more7p5counter20, g_r_less7p5counter20)
+"""
 pcount = plot_basic(z_LIST20, abs_r_mag_LIST20, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
+"""
 #======================================================
 # E.  Luminosity Function of 3 Volume limited samples
 #======================================================
+z_median_depth = 0.1
+M_binwidth     = 0.1
+#Note: Should redesign this not to design bin width based on points. 
+max_bin = -17.
+min_bin = -25.
+#num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+#print("Number of bins: %d" % num_of_bins)
+title_label = "Total Volume Limited r-band Mag L.F."
+x_label = "r-band Magnitude"
+y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
+log_y_bool = 1
+
+#Gets the Volume of the sample (median)
+#Computes dn/dM per Mpc^3 
+
+#Stores the combined lists.
+x_dataLIST = np.array(abs_r_mag_LIST)
+num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+
+da_volume = get_volume(z_lim18)
+da_volume_fr = 1./da_volume
+
+hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
+print("The -18 Volume is  : %.3e [(h^-1 Mpc)^3]." % da_volume)
+hweights18 = [ da_volume_fr ] * len(abs_r_mag_LIST18)
+
+da_volume = get_volume(z_lim19)
+da_volume_fr = 1./da_volume
+print("The -19 Volume is  : %.3e [(h^-1 Mpc)^3]." % da_volume)
+hweights19 = [ da_volume_fr ] * len(abs_r_mag_LIST19)
+
+da_volume = get_volume(z_lim20)
+da_volume_fr = 1./da_volume
+print("The -20 Volume is  : %.3e [(h^-1 Mpc)^3]." % da_volume)
+hweights20 = [ da_volume_fr ] * len(abs_r_mag_LIST20)
+plt.hist(abs_r_mag_LIST18, bins=num_of_bins, weights=hweights18, alpha=0.6, label='-18')
+plt.hist(abs_r_mag_LIST19, bins=num_of_bins, weights=hweights19, alpha=0.5, label='-19')
+#plt.legend()
+halpha = 0.3
+pltlabel = '-20'
+pcount = plot_hist(abs_r_mag_LIST20, hist_bins, hweights20, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
+
+
+"""
+#TO PLOT THE FULL COMBINED LF. 
 master_LFLIST = []
 z_median_depth = 0.1
 M_binwidth     = 0.1
@@ -593,8 +659,8 @@ else:
 print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
 hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
 weights = [ da_volume_fr ] * len(master_LFLIST)
-pcount = plot_hist(master_LFLIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
-
+pcount = plot_hist(master_LFLIST, hist_bins, weights, title_label, x_label, y_label, pltlabel, log_y_bool, halpha,  pcount)
+"""
 
 #======================================================
 # F.  Full Luminosity Function with 1/V_max (per bin) weighting. 
@@ -610,17 +676,13 @@ min_bin = -28.
 title_label = "Total Flux Limited r-band Mag L.F. Volume Corrected"
 x_label = "r-band Magnitude"
 y_label = "volume corrected dn/dMr dV [units: # h^-3 Mpc^3]"
+pltlabel = 'r-band'
 log_y_bool = 1
-
+halpha=1.0
 #Gets the Volume of the sample (median)
 #Computes dn/dM per Mpc^3 
-
-#da_volume = get_volume(z_max_depth)
-#da_volume_fr = 1./da_volume
-#Stores the combined lists.
-
-#print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
 hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
+#Initiailizes the array to weight of 1. 
 weights = [ 1 ] * len(abs_r_mag_LIST)
 prev_y = 9999
 for j, y in enumerate(abs_r_mag_LIST):
@@ -633,7 +695,7 @@ for j, y in enumerate(abs_r_mag_LIST):
 		pass
 	weights[j] = da_volume_fr
 
-pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, log_y_bool,  pcount)
+pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, pltlabel,  log_y_bool, halpha, pcount)
 
 
 
