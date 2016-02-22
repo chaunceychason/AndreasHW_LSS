@@ -11,7 +11,7 @@ Length: x_data: 550166
 Length: y_data: 550166
 
 Saving plot: /home/chasonn/Feb9LSSHW2_plot2.png
-Number of bins: 50
+Number of bins: 100
 There were 227627  BLUE galaxies!
 There were 322539  RED  galaxies!
 Entered HISTOGRAM Plot Function
@@ -20,6 +20,15 @@ type <type 'list'>
 len 550166
 
 Saving plot: /home/chasonn/Feb9LSSHW2_plot3.png
+Number of bins: 100
+There were 227627  BLUE galaxies!
+There were 322539  RED  galaxies!
+Entered HISTOGRAM Plot Function
+==========================
+type <type 'list'>
+len 550166
+
+Saving plot: /home/chasonn/Feb9LSSHW2_plot4.png
 Number of bins: 190
 The Volume is  : 19639366.8750 [(h^-1 Mpc)^3].
 Entered HISTOGRAM Plot Function
@@ -27,59 +36,51 @@ Entered HISTOGRAM Plot Function
 type <type 'list'>
 len 550166
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot4.png
+Saving plot: /home/chasonn/Feb9LSSHW2_plot5.png
 ==================
 M_r < -18:  
 =====================
 The Redshift bounds   :[ 0.0020 --> 0.0457 ] 
 The Volume is         : 1874459.5945 [(h^-1 Mpc)^3].
-The # of Red Galaxies : 23154 
-The # of Blue Galaxies: 26619 
-The Blue Fraction     : 0.535
-Entered Basic Plot Function
-Length: x_data: 49773
-Length: y_data: 49773
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot5.png
+The Total # of Galaxies: 49773 
+The # of Red Galaxies  : 23154 
+The # of Blue Galaxies : 26619 
+The Blue Fraction      : 0.535
 ==================
 M_r < -19:  
 =====================
 The Redshift bounds   :[ 0.0039 --> 0.0706 ] 
 The Volume is         : 6911011.0322 [(h^-1 Mpc)^3].
-The # of Red Galaxies : 54928 
-The # of Blue Galaxies: 42231 
-The Blue Fraction     : 0.435
-Entered Basic Plot Function
-Length: x_data: 97159
-Length: y_data: 97159
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot6.png
+The Total # of Galaxies: 97159 
+The # of Red Galaxies  : 54928 
+The # of Blue Galaxies : 42231 
+The Blue Fraction      : 0.435
 ==================
 M_r < -20:  
 =====================
 The Redshift bounds   :[ 0.0066 --> 0.1070 ] 
 The Volume is         : 24032096.8668 [(h^-1 Mpc)^3].
-The # of Red Galaxies : 89551 
-The # of Blue Galaxies: 44865 
-The Blue Fraction     : 0.334
-Entered Basic Plot Function
-Length: x_data: 134416
-Length: y_data: 134416
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot7.png
-As expected, the master_LFLIST list excludes certain values from r-band 18,19,20.
-The Volume is  : 19639366.8750 [(h^-1 Mpc)^3].
+The Total # of Galaxies: 134416 
+The # of Red Galaxies  : 89551 
+The # of Blue Galaxies : 44865 
+The Blue Fraction      : 0.334
+The -18 Volume is  : 1.874e+06 [(h^-1 Mpc)^3].
+The -19 Volume is  : 6.911e+06 [(h^-1 Mpc)^3].
+The -20 Volume is  : 2.403e+07 [(h^-1 Mpc)^3].
 Entered HISTOGRAM Plot Function
 ==========================
 type <type 'list'>
-len 218610
+len 134416
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot8.png
+Saving plot: /home/chasonn/Feb9LSSHW2_plot6.png
 Entered HISTOGRAM Plot Function
 ==========================
 type <type 'list'>
 len 550166
 
-Saving plot: /home/chasonn/Feb9LSSHW2_plot9.png
+Saving plot: /home/chasonn/Feb9LSSHW2_plot7.png
 
 END. No more things to do for the CPU!

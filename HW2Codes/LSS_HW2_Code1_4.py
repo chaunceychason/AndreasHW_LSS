@@ -443,7 +443,7 @@ pcount = plot_basic(z_LIST, abs_r_mag_LIST, title_label, x_label, y_label,  lege
 #======================================================
 title_label = "g-r Color Distribution of galaxies in LOG"
 x_label = "g-r color"
-y_label = "# of galaxies / bin of color; d_color = 0.1 "
+y_label = "# of galaxies / bin of color; d_color = 0.05 "
 pltlabel = 'g-r'
 
 x_data  = "gr_color_LIST" 
@@ -470,7 +470,7 @@ pcount = plot_hist(gr_color_LIST, hist_bins, weights, title_label, x_label, y_la
 #======================================================
 title_label = "g-r Color Distribution of galaxies"
 x_label = "g-r color"
-y_label = "# of galaxies / bin of color; d_color = 0.1 "
+y_label = "# of galaxies / bin of color; d_color = 0.05 "
 pltlabel = 'g-r'
 
 x_data  = "gr_color_LIST" 
