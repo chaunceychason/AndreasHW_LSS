@@ -505,7 +505,7 @@ print("Number of bins: %d" % num_of_bins)
 #np.histogram(abs_r_mag, bins=num_of_bins)
 title_label = "r-band Magnitude Histogram"
 x_label = "r-band Magnitude"
-y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
+y_label = "dn/dMr dV [units: counts h^3 Mpc^-3]"
 pltlabel = 'r-band'
 log_y_bool = 1
 
@@ -579,7 +579,7 @@ min_bin = -25.
 #print("Number of bins: %d" % num_of_bins)
 title_label = "Total Volume Limited r-band Mag L.F."
 x_label = "r-band Magnitude"
-y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
+y_label = "dn/dMr dV [units: counts h^3 Mpc^-3]"
 log_y_bool = 1
 
 #Gets the Volume of the sample (median)
@@ -636,7 +636,7 @@ min_bin = -28.
 #print("Number of bins: %d" % num_of_bins)
 title_label = "Total Flux Limited r-band Mag L.F. Volume Corrected"
 x_label = "r-band Magnitude"
-y_label = "volume corrected dn/dMr dV [units: # h^-3 Mpc^3]"
+y_label = "volume corrected dn/dMr dV [units: # h^3 Mpc^-3]"
 pltlabel = 'r-band'
 log_y_bool = 1
 halpha=1.0
