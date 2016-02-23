@@ -2,7 +2,7 @@
 #and then, inefficently piping to another awk to find the maximum redshift for that.
 
 #WORKING: 
-sort -k4,4 -k3,3 SDSS_DR7condensed.dat |  awk '{ if ($4 == "-20.00") print $0 }' 
+sort -k5,5 -k3,3 SDSS_DR7condensed.dat |  awk '{ if ($5 == "-20.00") print $0 }' 
 
 #SEMI-BROKEN:
 awk '$4 == -20.00' SDSS_DR7sortedC.dat | awk 

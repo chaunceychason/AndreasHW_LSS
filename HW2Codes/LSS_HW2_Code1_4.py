@@ -260,10 +260,10 @@ index_19subsample = 0
 index_20subsample = 0
 
 """
-=================================================
-Sets the volume limiting redshift, from: 
-=================================================
-       RA          DEC        Z       M_r    M_g
+==========================================================
+Sets the volume limiting redshift, from: (except on M_r.)
+==========================================================
+       RA          DEC        Z       M_g    M_r
 -20: 203.645876  20.257367 0.16635  -20.00 -21.34
 -19: 123.533843  48.703091 0.13640  -19.00 -20.95
 -18: 57.696922   -5.360849 0.07342  -18.00 -19.16
@@ -537,9 +537,7 @@ legend_val = 0
 yflip = True
 mag = -18
 print_subsample_info(mag, z_LIST18, g_r_more7p5counter18, g_r_less7p5counter18 )
-"""
 pcount = plot_basic(z_LIST18, abs_r_mag_LIST18, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-"""
 
 #-------------------------------------------
 # Subsample -19
@@ -554,9 +552,7 @@ legend_val = 0
 yflip = True
 mag = -19
 print_subsample_info(mag, z_LIST19, g_r_more7p5counter19, g_r_less7p5counter19 )
-"""
 pcount = plot_basic(z_LIST19, abs_r_mag_LIST19, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-"""
 #-------------------------------------------
 # Subsample -20
 #-------------------------------------------
@@ -570,9 +566,7 @@ legend_val = 0
 yflip = True
 mag = -20
 print_subsample_info(mag, z_LIST20, g_r_more7p5counter20, g_r_less7p5counter20)
-"""
 pcount = plot_basic(z_LIST20, abs_r_mag_LIST20, title_label, x_label, y_label,  legend_val, pointsize, yflip, pcount)
-"""
 #======================================================
 # E.  Luminosity Function of 3 Volume limited samples
 #======================================================
@@ -594,6 +588,8 @@ log_y_bool = 1
 #Stores the combined lists.
 x_dataLIST = np.array(abs_r_mag_LIST)
 num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
+#bins_list = np.linspace(min_bin, max_bin, num_of_bins+1)
+
 
 da_volume = get_volume(z_lim18)
 da_volume_fr = 1./da_volume
@@ -611,55 +607,20 @@ da_volume = get_volume(z_lim20)
 da_volume_fr = 1./da_volume
 print("The -20 Volume is  : %.3e [(h^-1 Mpc)^3]." % da_volume)
 hweights20 = [ da_volume_fr ] * len(abs_r_mag_LIST20)
+
+plt.hist(abs_r_mag_LIST18, bins=hist_bins, weights=hweights18, alpha=0.6, label='-18')
+plt.hist(abs_r_mag_LIST19, bins=hist_bins, weights=hweights19, alpha=0.5, label='-19')
+#plt.legend()
+halpha = 0.3
+pltlabel = '-20'
+pcount = plot_hist(abs_r_mag_LIST20, hist_bins, hweights20, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
+"""
 plt.hist(abs_r_mag_LIST18, bins=num_of_bins, weights=hweights18, alpha=0.6, label='-18')
 plt.hist(abs_r_mag_LIST19, bins=num_of_bins, weights=hweights19, alpha=0.5, label='-19')
 #plt.legend()
 halpha = 0.3
 pltlabel = '-20'
 pcount = plot_hist(abs_r_mag_LIST20, hist_bins, hweights20, title_label, x_label, y_label, pltlabel, log_y_bool, halpha, pcount)
-
-
-"""
-#TO PLOT THE FULL COMBINED LF. 
-master_LFLIST = []
-z_median_depth = 0.1
-M_binwidth     = 0.1
-#Note: Should redesign this not to design bin width based on points. 
-max_bin = -17.
-min_bin = -25.
-#num_of_bins  =  int((max_bin - min_bin) / M_binwidth)
-#print("Number of bins: %d" % num_of_bins)
-title_label = "Total Volume Limited r-band Mag L.F."
-x_label = "r-band Magnitude"
-y_label = "dn/dMr dV [units: counts h^-3 Mpc^3]"
-log_y_bool = 1
-
-#Gets the Volume of the sample (median)
-#Computes dn/dM per Mpc^3 
-da_volume = get_volume(z_median_depth)
-da_volume_fr = 1./da_volume
-#Stores the combined lists.
-x_dataLIST = np.array(abs_r_mag_LIST)
-master_LFLIST += abs_r_mag_LIST20
-#Builds the list for the combined Luminosity Function without duplicates
-for i in range(0, len(abs_r_mag_LIST19)):
-	if abs_r_mag_LIST19[i] > -20.:
-		master_LFLIST += [abs_r_mag_LIST19[i]]
-for i in range(0, len(abs_r_mag_LIST18)):
-	if abs_r_mag_LIST18[i] > -19:
-		master_LFLIST += [abs_r_mag_LIST18[i]]
-
-#Sanity check:
-if (len(abs_r_mag_LIST18)+len(abs_r_mag_LIST19)+ \
-	len(abs_r_mag_LIST20)) <= len(master_LFLIST):
-	print("The lengths of the vol limited samples are strange.")
-else:
-	print("As expected, the master_LFLIST list excludes certain values from r-band 18,19,20.")
-
-print("The Volume is  : %.4f [(h^-1 Mpc)^3]." % da_volume)
-hist_bins = np.arange(min_bin, max_bin+0.01, M_binwidth)
-weights = [ da_volume_fr ] * len(master_LFLIST)
-pcount = plot_hist(master_LFLIST, hist_bins, weights, title_label, x_label, y_label, pltlabel, log_y_bool, halpha,  pcount)
 """
 
 #======================================================
@@ -696,7 +657,6 @@ for j, y in enumerate(abs_r_mag_LIST):
 	weights[j] = da_volume_fr
 
 pcount = plot_hist(abs_r_mag_LIST, hist_bins, weights, title_label, x_label, y_label, pltlabel,  log_y_bool, halpha, pcount)
-
 
 
 print("\nEND. No more things to do for the CPU!")
