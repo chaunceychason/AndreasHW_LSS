@@ -124,9 +124,9 @@ int main ()
    //long int FILELENGTH20z  = 28383; 
    //long int FILELENGTH21r  = 5495;  
    //long int FILELENGTHrand = 42654; 
-   long int FILELENGTHDM = 40000;
+   long int FILELENGTHDM = 50000;
    //long int FILELENGTHDMrand = 100000;
-   long int FILELENGTHDMrand = 45000;
+   long int FILELENGTHDMrand = 100000;
 
 
    //string datafilename = 'SDSS_random.dat'
@@ -142,7 +142,7 @@ int main ()
     */
 
    
-   static const char DM_datafile[] = "DM.dat"; 
+   static const char DM_datafile[] = "/home/chasonn/LargeScaleHW/HW3Codes/DMCorrelationFunctionParallel/DM.dat"; 
    FILE *myfile = fopen ( DM_datafile, "r" );
    if (myfile == NULL) {
       printf("input_file.txt not opened, exiting...\n");
@@ -234,7 +234,7 @@ int main ()
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -317,7 +317,7 @@ int main ()
 
 
    // INIITIALIZE FOR RANDOM COUNTS
-   static const char random_datafile[] = "DM_random.dat"; 
+   static const char random_datafile[] = "/home/chasonn/LargeScaleHW/HW3Codes/DMCorrelationFunctionParallel/DM_random.dat"; 
    //static const char r21_datafile[] = "SDSS_Mr21_rspace.dat"; 
    // Stores the number of points in random set. 
    long int N_rand = FILELENGTHDMrand;
@@ -374,23 +374,23 @@ int main ()
       for(i=0; i< (N_rand-1); ++i){
          
 
-         x1 = X_LIST[i];
-         y1 = Y_LIST[i];
-         z1 = Z_LIST[i];
+         x1 = randX_LIST[i];
+         y1 = randY_LIST[i];
+         z1 = randZ_LIST[i];
 
          
          for(j=0; j< (N_rand-1); ++j){
             if (j!=i){
-               x2 = X_LIST[j];
-               y2 = Y_LIST[j];
-               z2 = Z_LIST[j];
+               x2 = randX_LIST[j];
+               y2 = randY_LIST[j];
+               z2 = randZ_LIST[j];
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
                D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -462,11 +462,10 @@ int main ()
 
    //DM.
    printf("Calculating DM Correlation Function...\n");
+   double ratio = (double) N_rand / (double) N_data;
    for(i=0; i<num_bins; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
-      Xi_func[i] = (N_rand / N_data)*(N_rand / N_data) * \
-              ((distance_counts[i]/randdistance_counts[i]) - 1.0);
-
+      Xi_func[i] = ratio * ratio *  ( (double) distance_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
       printf("%f ", Xi_func[i]); 
    }
    printf("\n");

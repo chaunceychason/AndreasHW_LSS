@@ -247,7 +247,7 @@ int main ()
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -293,7 +293,7 @@ int main ()
    printf("\n       **");
    printf("\n        * *");
    printf("\n        * * *");
-   printf("\n       * * * *");
+   printf("\n       * * * *\n");
 
    printf("****************************\n");
    printf("FINISHED PRAGMA OMP CRITICAL\n");
@@ -424,7 +424,7 @@ int main ()
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -571,7 +571,7 @@ int main ()
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -723,7 +723,7 @@ int main ()
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = floor((logD - logr_min)*(num_bins/(logr_max - logr_min)));            
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
                if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
                   if (dist_index > 14)
@@ -794,7 +794,11 @@ int main ()
    // =================================
 
    //Mr 21.
+
    printf("Calculating Mr21 Correlation Function...\n");
+   printf("Nrand: %ld\n", N_rand);
+   printf("Ndata: %ld\n", N_data);
+   /*
    for(i=0; i<num_bins; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
       Xi_func[i] = (N_rand / N_data)*(N_rand / N_data) * \
@@ -802,9 +806,21 @@ int main ()
 
       printf("%f ", Xi_func[i]); 
    }
+   */
+   
+   double ratio = (double) N_rand / (double) N_data;
+   for(i=0; i<num_bins; i++){
+      //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
+      Xi_func[i] = ratio * ratio *  ( (double) distance_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
+      printf("%f ", Xi_func[i]); 
+   }
    printf("\n");
+
    //Mr 20.
    printf("Calculating Mr20 Correlation Function...\n");
+   printf("Nrand: %ld", N_rand);
+   printf("N20data: %ld", N20_data);
+
    for(i=0; i<num_bins; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
       Xi20_func[i] = (N_rand / N20_data)*(N_rand / N20_data) * \
