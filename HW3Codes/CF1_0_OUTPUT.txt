@@ -1,0 +1,28 @@
+The length of RADECZdata is 5495
+Finished with 5 percent of the outer i loop. 
+Finished with 10 percent of the outer i loop. 
+Finished with 20 percent of the outer i loop. 
+Finished with 50 percent of the outer i loop. 
+Finished with 75 percent of the outer i loop. 
+FOUND THE COUNTS! Error Counts 29917386
+======================
+For values of logr of:
+[-1.         -0.83564286 -0.67128571 -0.50692857 -0.34257143 -0.17821429
+ -0.01385714  0.1505      0.31485714  0.47921429  0.64357143  0.80792857
+  0.97228571  1.13664286  1.301     ]
+For values of r of:
+[  0.1          0.14600144   0.21316421   0.31122282   0.4543898
+   0.66341565   0.96859641   1.41416473   2.06470088   3.01449304
+   4.40120329   6.42582023   9.38179015  13.69754882  19.9986187 ]
+THE LOGDATACOUNT is:
+[  6.60000000e+01   1.20000000e+02   1.44000000e+02   2.76000000e+02
+   4.32000000e+02   7.10000000e+02   1.20400000e+03   1.49800000e+03
+   1.87400000e+03   3.34600000e+03   6.34400000e+03   1.22260000e+04
+   2.60740000e+04   6.21820000e+04   1.55648000e+05]
+The program has finished running. All files closed. 
+The results should be in your directory
+
+real	19m22.703s
+user	19m22.513s
+sys	0m0.256s
+
