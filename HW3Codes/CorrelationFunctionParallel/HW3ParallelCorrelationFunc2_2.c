@@ -6,6 +6,8 @@
 #include <omp.h>
 
 #define CHUNKSIZE 50
+#define num_threads 32
+#define num_bins_preproc 15
 #define N     1000
 #define PI  3.14159621234161928
 /* 
@@ -96,25 +98,35 @@ int main ()
    double deg_to_rad = (2. * PI / 360.);
 
    //Create the Distance Array. 
-   const int num_bins = 15;
+   //const int num_bins = 15;
+   //static const int num_bins_static = 15;
+   //int num_bins_non_const = 15;
    double logr_min = -1.0;
    double logr_max = 1.3011;
+   
+   double logrSQ_min = log10( pow( pow(10., logr_min), 2.) );
+   double logrSQ_max = log10( pow( pow(10., logr_max), 2.) );
+
+
    long int errorcounts = 0;
    printf("line104\n");
    //    r                 0.1,                 ...                  , 20 
    // logr                 -1,                  ...                  ,1.3011
    // index                 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-   long int distance_counts[15] = { 0 };
-   long int distance20_counts[15] = { 0 };
-   long int distance20z_counts[15] = { 0 };
-   long int randdistance_counts[15] = { 0 };
+   long int distance_counts[num_bins_preproc] = { 0 };
+   //long int * distance_counts =
+
+   long int distance20_counts[num_bins_preproc] = { 0 };
+   long int distance20z_counts[num_bins_preproc] = { 0 };
+   long int randdistance_counts[num_bins_preproc] = { 0 };
    
-   double Xi_func[15] = { 0.0 };
-   double Xi20_func[15] = { 0.0 };
-   double Xi20z_func[15] = { 0.0 };
+   double Xi_func[num_bins_preproc] = { 0.0 };
+   double Xi20_func[num_bins_preproc] = { 0.0 };
+   double Xi20z_func[num_bins_preproc] = { 0.0 };
    printf("Line 118\n");
 
    int dist_index;
+   int distSQ_index;
 
    //This should be set below 5495 to take a limited sample. 
    //int FILELENGTH = 4000;
@@ -195,6 +207,7 @@ int main ()
    printf("Beginning Nested Loops...\n");
    
    double D, logD; 
+   double DSQ, logDSQ;
    double r = 0; 
    double DEC_rad = 0;
    double RA_rad = 0;
@@ -211,13 +224,13 @@ int main ()
 
    chunk = CHUNKSIZE;
 
-   #pragma omp parallel shared( Z_LIST, DEC_LIST, RA_LIST, N_data, deg_to_rad ,chunk) private (D,\
-   logD, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, dist_index, i, j )
+   #pragma omp parallel shared( Z_LIST, DEC_LIST, RA_LIST, N_data, deg_to_rad ,chunk) private (DSQ,\
+   logDSQ, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, distSQ_index, i, j )
    {
       
-
-      long int sum_local_counts[15];
-      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
+      omp_set_num_threads(num_threads);
+      long int sum_local_counts[num_bins_preproc];
+      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
 
 
       #pragma omp for
@@ -243,20 +256,24 @@ int main ()
                z2 = rj * sin( DEC_radj );
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               logD = log10(D);
-               
+               //D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
+               //logD = log10(D);               
+               DSQ = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2);
+               logDSQ = log10(DSQ);
+
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins){
+               //dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min)))); 
+               distSQ_index = (int) (floor((logDSQ - logrSQ_min)*(num_bins_preproc/(logrSQ_max - logrSQ_min))));
+               //if (dist_index >= 0 && dist_index < num_bins){
+               if (distSQ_index >= 0 && distSQ_index < num_bins_preproc){
                   //Increment the appropiate bin.
-                  if (dist_index > 14)
+                  if (distSQ_index >= num_bins_preproc)
                      printf("YELLING!");
                   /*
                   //OLD NON-MULTITHREADED:
                   distance_counts[dist_index] += 1;
                   */
-                  sum_local_counts[dist_index] += 1;
+                  sum_local_counts[distSQ_index] += 1;
                } 
             }
          
@@ -269,7 +286,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins; ++i)
+         for(i=0 ; i < num_bins_preproc; ++i)
          {
             distance_counts[i] += sum_local_counts[i];
          }
@@ -303,7 +320,7 @@ int main ()
    printf("FINISHED Mr21 NESTED LOOP. \n");
 
    printf("Dividing Counts by two to correct double counting...");
-   for(i=0 ; i < num_bins; ++i)
+   for(i=0 ; i < num_bins_preproc; ++i)
    {
       distance_counts[i] = (long long) (floor(distance_counts[i]/2.)) ;
       printf("%ld ", distance_counts[i]);
@@ -390,12 +407,13 @@ int main ()
    double y2 = 0;
    double z2 = 0;  
    */                      
-   #pragma omp parallel shared( Z20_LIST, DEC20_LIST, RA20_LIST, N20_data, deg_to_rad ,chunk) private (D,\
-   logD, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, dist_index, i, j )
+   #pragma omp parallel shared( Z20_LIST, DEC20_LIST, RA20_LIST, N20_data, deg_to_rad ,chunk) private (DSQ,\
+   logDSQ, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, distSQ_index, i, j )
    {
-      
-      long int sum_local_counts[15];
-      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
+
+      omp_set_num_threads(num_threads);
+      long int sum_local_counts[num_bins_preproc];
+      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
 
 
       #pragma omp for
@@ -420,17 +438,18 @@ int main ()
                z2 = rj * sin( DEC_radj );
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               logD = log10(D);
+               DSQ = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2);
+               logDSQ = log10(DSQ);
+
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins){
+               distSQ_index = (int) (floor((logDSQ-logrSQ_min)*(num_bins_preproc/(logrSQ_max-logrSQ_min))));            
+               if (distSQ_index >= 0 && distSQ_index < num_bins_preproc){
                   //Increment the appropiate bin.
-                  if (dist_index > 14)
+                  if (distSQ_index >= num_bins_preproc)
                      printf("YELLING!");
                   //distance20_counts[dist_index] += 1;
-                  sum_local_counts[dist_index] += 1;
+                  sum_local_counts[distSQ_index] += 1;
                } 
             }
          
@@ -443,7 +462,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins; ++i)
+         for(i=0 ; i < num_bins_preproc; ++i)
          {
             distance20_counts[i] += sum_local_counts[i];
          }
@@ -456,7 +475,7 @@ int main ()
    printf("FINISHED Mr20 NESTED LOOP. \n");
    printf("Counts: ");
 
-   for(i =0; i< num_bins; ++i){
+   for(i =0; i< num_bins_preproc; ++i){
       distance20_counts[i] = (long long) (floor(distance20_counts[i]/2.)) ;
       printf("%ld ", distance20_counts[i]);
    }
@@ -537,15 +556,15 @@ int main ()
    double z2 = 0;  
    */                      
 
-   #pragma omp parallel shared( Z20z_LIST, DEC20z_LIST, RA20z_LIST, N20z_data, deg_to_rad ,chunk) private (D,\
-   logD, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, dist_index, i, j )
+   #pragma omp parallel shared( Z20z_LIST, DEC20z_LIST, RA20z_LIST, N20z_data, deg_to_rad ,chunk) private (DSQ,\
+   logDSQ, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, distSQ_index, i, j )
    {
       
-      long int sum_local_counts[15];
-      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
+      long int sum_local_counts[num_bins_preproc];
+      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
 
 
-      #pragma omp for
+      #pragma omp for schedule(guided, chunk)
       for(i=0; i< (N20z_data-1); ++i){
          
          r = 2998. * Z20z_LIST[i];
@@ -567,17 +586,18 @@ int main ()
                z2 = rj * sin( DEC_radj );
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               logD = log10(D);
+               DSQ = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2);
+               logDSQ = log10(DSQ);
+
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins){
+               distSQ_index = (int) (floor((logDSQ - logrSQ_min)*(num_bins_preproc/(logrSQ_max - logrSQ_min))));            
+               if (distSQ_index >= 0 && distSQ_index < num_bins_preproc){
                   //Increment the appropiate bin.
-                  if (dist_index > 14)
+                  if (distSQ_index >= num_bins_preproc)
                      printf("YELLING!");
                   //distance20z_counts[dist_index] += 1;
-                  sum_local_counts[dist_index] += 1;
+                  sum_local_counts[distSQ_index] += 1;
                } 
             }
          
@@ -590,7 +610,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins; ++i)
+         for(i=0 ; i < num_bins_preproc; ++i)
          {
             distance20z_counts[i] += sum_local_counts[i];
          }
@@ -603,7 +623,7 @@ int main ()
    printf("FINISHED Mr20z NESTED LOOP. \n");
    printf("Counts: ");
 
-   for(i =0; i< num_bins; ++i){
+   for(i =0; i< num_bins_preproc; ++i){
       distance20z_counts[i] = (long long) (floor(distance20z_counts[i]/2.)) ;
       printf("%ld ", distance20z_counts[i]);
    }
@@ -681,16 +701,16 @@ int main ()
    */
 
 
-   #pragma omp parallel shared( randZ_LIST, randDEC_LIST, randRA_LIST, N_rand, deg_to_rad ,chunk) private (D,\
-   logD, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, dist_index, i, j )
+   #pragma omp parallel shared( randZ_LIST, randDEC_LIST, randRA_LIST, N_rand, deg_to_rad ,chunk) private (DSQ,\
+   logDSQ, r, rj, DEC_rad, DEC_radj, RA_rad, RA_radj, x1, y1, z1, x2, y2, z2, distSQ_index, i, j )
    {
       
 
-      long int sum_local_counts[15];
-      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
+      long int sum_local_counts[num_bins_preproc];
+      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
 
 
-      #pragma omp for
+      #pragma omp for schedule(guided, chunk)
       for(i=0; i< (N_rand-1); ++i){
          
          //printf("Inside first: %lf %lf\n", RA_LIST[i], x1);
@@ -719,17 +739,18 @@ int main ()
                z2 = rj * sin( DEC_radj );
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               logD = log10(D);
+               DSQ = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2);
+               logDSQ = log10(DSQ);
+
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins){
+               distSQ_index = (int) (floor((logDSQ-logrSQ_min)*(num_bins_preproc/(logrSQ_max-logrSQ_min))));            
+               if (distSQ_index >= 0 && distSQ_index < num_bins_preproc){
                   //Increment the appropiate bin.
-                  if (dist_index > 14)
+                  if (distSQ_index >= num_bins_preproc)
                      printf("YELLING!");
                   //randdistance_counts[dist_index] += 1;
-                  sum_local_counts[dist_index] += 1;
+                  sum_local_counts[distSQ_index] += 1;
                } 
             }
          
@@ -742,7 +763,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins; ++i)
+         for(i=0 ; i < num_bins_preproc; ++i)
          {
             randdistance_counts[i] += sum_local_counts[i];
          }
@@ -755,7 +776,7 @@ int main ()
    printf("FINISHED RANDOM NESTED LOOPS! \n");
    printf("Counts: ");
 
-   for(i =0; i< num_bins; ++i){
+   for(i =0; i< num_bins_preproc; ++i){
       randdistance_counts[i] = (long long) (floor(randdistance_counts[i]/2.)) ;
       printf("%ld ", randdistance_counts[i]);
 
@@ -798,47 +819,41 @@ int main ()
    printf("Calculating Mr21 Correlation Function...\n");
    printf("Nrand: %ld\n", N_rand);
    printf("Ndata: %ld\n", N_data);
-   /*
-   for(i=0; i<num_bins; i++){
-      //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
-      Xi_func[i] = (N_rand / N_data)*(N_rand / N_data) * \
-              ((distance_counts[i]/randdistance_counts[i]) - 1.0);
+ 
 
-      printf("%f ", Xi_func[i]); 
-   }
-   */
-   
-   double ratio = (double) N_rand / (double) N_data;
-   for(i=0; i<num_bins; i++){
+   double ratio = (double) ( N_rand / (double) N_data);
+   for(i=0; i<num_bins_preproc; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
       Xi_func[i] = ratio * ratio *  ( (double) distance_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
-      printf("%f ", Xi_func[i]); 
+      printf("%.2lf ", Xi_func[i]); 
    }
    printf("\n");
 
    //Mr 20.
    printf("Calculating Mr20 Correlation Function...\n");
-   printf("Nrand: %ld", N_rand);
-   printf("N20data: %ld", N20_data);
+   printf("Nrand: %ld\n", N_rand);
+   printf("N20data: %ld\n", N20_data);
 
-   for(i=0; i<num_bins; i++){
+   ratio = (double)( (double) N_rand / (double) N20_data);
+   for(i=0; i<num_bins_preproc; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
-      Xi20_func[i] = (N_rand / N20_data)*(N_rand / N20_data) * \
-              ((distance20_counts[i]/randdistance_counts[i]) - 1.0);
-
-      printf("%f ", Xi20_func[i]); 
+      Xi20_func[i] = ratio * ratio *  ( (double) distance20_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
+      printf("%.2lf ", Xi20_func[i]); 
    }
+
    printf("\n");
    //Mr 20z
    printf("Calculating Mr20z Correlation Function...\n");
-   for(i=0; i<num_bins; i++){
-      //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
-      Xi20z_func[i] = (N_rand / N20z_data)*(N_rand / N20z_data) * \
-              ((distance20z_counts[i]/randdistance_counts[i]) - 1.0);
 
-      printf("%f ", Xi20z_func[i]); 
+   ratio = (double) ( N_rand / (double) N20z_data );
+   for(i=0; i<num_bins_preproc; i++){
+      //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
+      Xi20z_func[i] = ratio * ratio *  ( (double) distance20z_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
+      printf("%.2lf ", Xi20z_func[i]); 
    }
+
    printf("\n");
+
    //----------------------------------------------------
    /***
     *      ___                 _         ___ ___ _    ___ 
@@ -859,7 +874,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%ld \n", distance_counts[i]);
    } 
    fclose(fp_out);
@@ -876,7 +891,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%ld \n", distance20_counts[i]);
    } 
    fclose(fp_out);
@@ -892,7 +907,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%ld \n", distance20z_counts[i]);
    } 
    fclose(fp_out);
@@ -908,7 +923,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%ld \n", randdistance_counts[i]);
    } 
    fclose(fp_out);
@@ -925,7 +940,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%f \n", Xi_func[i]);
    } 
    fclose(fp_out);
@@ -941,7 +956,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%f \n", Xi20_func[i]);
    } 
    fclose(fp_out);
@@ -957,7 +972,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins ; i++ ) {
+   for ( i=0 ; i < num_bins_preproc ; i++ ) {
       fprintf(fp_out,"%f \n", Xi20z_func[i]);
    } 
    fclose(fp_out);

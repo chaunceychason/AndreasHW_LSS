@@ -21,7 +21,7 @@ from matplotlib.ticker import FormatStrFormatter
 #  } '_} \ `-' /| }\  {| },-.  } {  | }\ '-} /| }\  {                   
 #  `--'   `---' `-' `-'`----'  `-'  `-' `---' `-' `-'                   
 #                                                                       
-# The Sample data is separated into 15 logarithmic bins of separation in range 
+# The Sample data is separated into 15 or N_sample logarithmic bins of separation in range 
 # 0.1 - 20 h**-1 Mpc ( the first bin at log r = -1 and the last bin is at 
 # log r = 1.301 )
 #
@@ -58,12 +58,13 @@ datafilename1 = 'output_Xi_DM.txt'
 datafilename2 = 'output_Xi_20r.txt'
 datafilename3 = 'output_Xi_21r.txt'
 
+datafilename4 = 'output_DMcounts.txt'
+datafilename5 = 'output_counts_DMrandom.txt'
+
+
 
 #with open('time_stats_run1temp.txt' , "r") as f2:
 
-r_list = np.logspace(logr_min, logr_max, 15)
-logr_list = np.log10(r_list)
-logr_datacountlist = np.zeros(15) 
 
 #CHECK IF FILE EXISTS.
 if os.path.exists(datafilename1):
@@ -86,14 +87,41 @@ else:
 	print("QUITTING PROGRAM.")
 	sys.exit("Error Encountered with File I/O")  
 
+if os.path.exists(datafilename4):
+	pass
+else:
+	print("os.path.exists says: FILE DOES NOT EXIST....")
+	print("QUITTING PROGRAM.")
+	sys.exit("Error Encountered with File I/O")  
+
+if os.path.exists(datafilename5):
+	pass
+else:
+	print("os.path.exists says: FILE DOES NOT EXIST....")
+	print("QUITTING PROGRAM.")
+	sys.exit("Error Encountered with File I/O")  
+
+
 #Read in datafile:
 print("Reading File: Data should be structured...")
 Xi1data = np.loadtxt(datafilename1)
 Xi2data = np.loadtxt(datafilename2)
 Xi3data = np.loadtxt(datafilename3)
 
+countDM = np.loadtxt(datafilename4)
+countDMrand = np.loadtxt(datafilename5)
+
+sqrtDM     = np.sqrt(countDM)
+sqrtDMrand = np.sqrt(countDMrand)
+
+errorsDM = Xi1data * ( (1./sqrtDM)**2. + (1./ sqrtDMrand)**2. )**(1./2.)
+
 N_sample = len(Xi1data)
 print("Lenth of XiData is %d" % N_sample)
+
+r_list = np.logspace(logr_min, logr_max, N_sample)
+logr_list = np.log10(r_list)
+logr_datacountlist = np.zeros(N_sample) 
 
 
 print("Made the Arrays!")
@@ -126,20 +154,21 @@ bias2 = np.sqrt(Xi3data/Xi1data)  #21r
     Correlation Function Plot with DM
 =====================================
 """
-plot_title="Correlation Function -20 & -21"
+plot_title="Dark Matter Correlation Function "
 x_axis="log Distance [h-1 Mpc]"
-y_axis="Xi(r)"
+y_axis="Xi(r) + 1"
 
 plt.title(plot_title)
 plt.xlabel(x_axis)
 plt.ylabel(y_axis)
 
 
-plt.plot(logr_list, Xi1data, color='b' ,marker='o', label='Mr > -20r' )
+y1data = Xi1data + 1
+plt.plot(logr_list, y1data, color='b' ,marker='o', label='Dark Matter' )
 #plt.plot(logr_list, Xi3data, color='g' ,marker='o', label='Mr > -21r' )
 
 #plt.xscale('log')
-#plt.yscale('log')
+plt.yscale('log')
 #---------------	
 #plt.ylim(0, 1400)	
 plt.legend(loc='best')
@@ -150,12 +179,59 @@ plt.savefig(tmp_filename, rasterized=True)
 plt.clf()
 
 """
+=======================================
+   DM Correlation Function Plot w/ ERRORS
+=======================================
+"""
+plot_title="DM Correlation Function w/ ERRORS"
+x_axis="log Distance [h-1 Mpc]"
+y_axis="Xi(r) + 1"
+
+plt.title(plot_title)
+plt.xlabel(x_axis)
+plt.ylabel(y_axis)
+
+#y1data = Xi1data + 1
+
+
+"""
+PLOT ERRORBARS
+---------------
+for some points v-verr is becoming negative, values <=0 cannot be shown on 
+a logarithmic axis (log(x), x<=0 is undefined) To get around this you can 
+use asymmetric errors and force the resulting values to be above zero for 
+the offending points.
+
+At any point for which errors are bigger than value verr>=v we assign 
+verr=.999v in this case the error bar will go close to zero.
+"""
+
+#eb = plt.errorbar( logr_list, y1data, yerr=10, color='b' )
+verr2 = np.array(errorsDM)
+verr2[errorsDM>=Xi1data] = Xi1data[errorsDM>=Xi1data]*.99999
+plt.plot(logr_list, y1data, color='r' ,marker='o', label='Dark Matter' )
+plt.errorbar(logr_list, y1data, yerr=[verr2,errorsDM], label='DM Poisson Err.')
+
+
+#plt.xscale('log')
+plt.yscale('log')
+#---------------	
+#plt.ylim(0, 1400)	
+plt.legend(loc='best')
+
+#Saves Plot
+tmp_filename = "HW3CorrelationFuncParallelDMwERRORS.png"
+plt.savefig(tmp_filename, rasterized=True)
+plt.clf()
+
+
+"""
 =========================================
     BIAS Function Plot 
 =========================================
 """
 
-plot_title="Bias for -20 real vs z"
+plot_title="Bias of Mr = -20 and -21 (real sample)"
 x_axis="Log Distance [h-1 Mpc]"
 y_axis="Bias (r)"
 

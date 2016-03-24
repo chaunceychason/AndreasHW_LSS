@@ -7,7 +7,6 @@
 
 #define CHUNKSIZE 50
 #define num_threads 32
-#define num_bins_preproc 15
 #define N     1000
 #define PI  3.14159621234161928
 /* 
@@ -107,25 +106,16 @@ int main ()
 
    //Create the Distance Array. 
    const int num_bins = 15;
-   
-
-   //Comment: The next part was done for convience to prevent renaming everything.
-   //The logrNOTSQ_min is the actual logr_min and max values --> r_min, max={.1,20}
-   //This trickery is done to avoid having to square_root distance just for an index.
-   double logrNOTSQ_min = -1.0;
-   double logrNOTSQ_max = 1.3011;
-   
-   double logr_min = log10( pow( pow(10., logrNOTSQ_min), 2.) );
-   double logr_max = log10( pow( pow(10., logrNOTSQ_max), 2.) );
-
+   double logr_min = -1.0;
+   double logr_max = 1.3011;
    long int errorcounts = 0;
    //    r                 0.1,                 ...                  , 20 
    // logr                 -1,                  ...                  ,1.3011
    // index                 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-   long int distance_counts[num_bins_preproc] = { 0 };
-   long int randdistance_counts[num_bins_preproc] = { 0 };
+   long int distance_counts[15] = { 0 };
+   long int randdistance_counts[15] = { 0 };
    
-   double Xi_func[num_bins_preproc] = { 0.0 };
+   double Xi_func[15] = { 0.0 };
    int dist_index;
 
    //This should be set below 5495 to take a limited sample. 
@@ -201,7 +191,6 @@ int main ()
    // COMPUTE Mr 21 DATA COUNTS
    //==========================
    printf("Beginning Nested Loops...\n");
-   printf("Note: using Distance Squared to avoid taking SQRT for index rank.\n");
    
    double D, logD; 
    double r = 0; 
@@ -222,8 +211,8 @@ int main ()
       
       //OMP_NUM_THREADS = 16; 
       omp_set_num_threads(num_threads);
-      long int sum_local_counts[num_bins_preproc];
-      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
+      long int sum_local_counts[15];
+      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
 
 
       #pragma omp for schedule(guided, chunk)
@@ -243,16 +232,14 @@ int main ()
                z2 = Z_LIST[j];
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               //Comment: actual D commented out, so not to comput sqrt just for index rank.
-               //D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               D =  (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) ;
+               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins_preproc/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins_preproc){
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
+               if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
-                  if (dist_index >= num_bins_preproc)
+                  if (dist_index > 14)
                      printf("YELLING!");
                   /*
                   //OLD NON-MULTITHREADED:
@@ -271,7 +258,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins_preproc; ++i)
+         for(i=0 ; i < num_bins; ++i)
          {
             distance_counts[i] += sum_local_counts[i];
          }
@@ -306,7 +293,7 @@ int main ()
 
    printf("Dividing Counts by two to correct double counting...");
    printf("Counts: ");
-   for(i=0 ; i < num_bins_preproc; ++i)
+   for(i=0 ; i < num_bins; ++i)
    {
       distance_counts[i] = (long long) (floor(distance_counts[i]/2.)) ;
       printf("%ld ", distance_counts[i]);
@@ -381,8 +368,8 @@ int main ()
    {
       
       omp_set_num_threads(num_threads);
-      long int sum_local_counts[num_bins_preproc];
-      memset(sum_local_counts, 0, num_bins_preproc * sizeof(sum_local_counts[0]) );
+      long int sum_local_counts[15];
+      memset(sum_local_counts, 0, 15 * sizeof(sum_local_counts[0]) );
 
 
       #pragma omp for schedule(guided, chunk) 
@@ -401,15 +388,14 @@ int main ()
                z2 = randZ_LIST[j];
 
                //D = distance_given_2points(*x1, *y1, *z1, *x2, *y2, *z2);
-               //D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-               D = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2);
+               D = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
                logD = log10(D);
                
                //dist_index = (logD +1)*(num_bins/(logr_max +1))
-               dist_index = (int) (floor((logD - logr_min)*(num_bins_preproc/(logr_max - logr_min))));            
-               if (dist_index >= 0 && dist_index < num_bins_preproc){
+               dist_index = (int) (floor((logD - logr_min)*(num_bins/(logr_max - logr_min))));            
+               if (dist_index >= 0 && dist_index < num_bins){
                   //Increment the appropiate bin.
-                  if (dist_index >= num_bins_preproc)
+                  if (dist_index > 14)
                      printf("YELLING!");
                   //randdistance_counts[dist_index] += 1;
                   sum_local_counts[dist_index] += 1;
@@ -425,7 +411,7 @@ int main ()
       {
          //Sum up over the local counts on each thread to get total distance count.
          
-         for(i=0 ; i < num_bins_preproc; ++i)
+         for(i=0 ; i < num_bins; ++i)
          {
             randdistance_counts[i] += sum_local_counts[i];
          }
@@ -438,7 +424,7 @@ int main ()
    printf("FINISHED RANDOM NESTED LOOPS! \n");
    printf("Counts: ");
 
-   for(i =0; i< num_bins_preproc; ++i){
+   for(i =0; i< num_bins; ++i){
       randdistance_counts[i] = (long long) (floor(randdistance_counts[i]/2.)) ;
       printf("%ld ", randdistance_counts[i]);
 
@@ -479,10 +465,10 @@ int main ()
    //DM.
    printf("Calculating DM Correlation Function...\n");
    double ratio = (double) N_rand / (double) N_data;
-   for(i=0; i<num_bins_preproc; i++){
+   for(i=0; i<num_bins; i++){
       //Compute the Correlation Function: Xi = (Ngal/Nrand)^2 * (DD/RR  - 1)
       Xi_func[i] = ratio * ratio *  ( (double) distance_counts[i] / (double) randdistance_counts[i]) - 1.0 ;
-      printf("%.2lf ", Xi_func[i]); 
+      printf("%f ", Xi_func[i]); 
    }
    printf("\n");
 
@@ -506,7 +492,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins_preproc ; i++ ) {
+   for ( i=0 ; i < num_bins ; i++ ) {
       fprintf(fp_out,"%ld \n", distance_counts[i]);
    } 
    fclose(fp_out);
@@ -522,7 +508,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins_preproc ; i++ ) {
+   for ( i=0 ; i < num_bins ; i++ ) {
       fprintf(fp_out,"%ld \n", randdistance_counts[i]);
    } 
    fclose(fp_out);
@@ -539,7 +525,7 @@ int main ()
       printf("output_file.txt not opened, exiting...\n");
       exit(0);
    }
-   for ( i=0 ; i < num_bins_preproc ; i++ ) {
+   for ( i=0 ; i < num_bins ; i++ ) {
       fprintf(fp_out,"%f \n", Xi_func[i]);
    } 
    fclose(fp_out);
