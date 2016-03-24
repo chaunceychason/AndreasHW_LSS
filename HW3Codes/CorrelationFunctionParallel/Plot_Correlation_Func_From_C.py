@@ -20,7 +20,14 @@ from matplotlib.ticker import FormatStrFormatter
 #  } |__}| } { ||  \{ || }`-'`-' '-'{ |/ {-. \|  \{ |                   
 #  } '_} \ `-' /| }\  {| },-.  } {  | }\ '-} /| }\  {                   
 #  `--'   `---' `-' `-'`----'  `-'  `-' `---' `-' `-'                   
-#                                                                       
+*     _______  ___      _______  _______  _______  _______  ______   
+*    |       ||   |    |       ||       ||       ||       ||    _ |  
+*    |    _  ||   |    |   _   ||_     _||_     _||    ___||   | ||  
+*    |   |_| ||   |    |  | |  |  |   |    |   |  |   |___ |   |_||_ 
+*    |    ___||   |___ |  |_|  |  |   |    |   |  |    ___||    __  |
+*    |   |    |       ||       |  |   |    |   |  |   |___ |   |  | |
+*    |___|    |_______||_______|  |___|    |___|  |_______||___|  |_|
+#                                                                      
 # The Sample data is separated into 15 (or N_sample) logarithmic bins of separation in range 
 # 0.1 - 20 h**-1 Mpc ( the first bin at log r = -1 and the last bin is at 
 # log r = 1.301 )
@@ -230,7 +237,7 @@ plt.clf()
     Correlation Function Plot w/ ERRORS
 =======================================
 """
-plot_title="Correlation Function -20 & -21"
+plot_title="Correlation Function -20 & -21 w/ ERRORS"
 x_axis="log Distance [h-1 Mpc]"
 y_axis="Xi(r) + 1"
 
@@ -258,7 +265,7 @@ verr=.999v in this case the error bar will go close to zero.
 #eb = plt.errorbar( logr_list, y1data, yerr=10, color='b' )
 verr2 = np.array(errors20)
 verr2[errors20>=Xi1data] = Xi1data[errors20>=Xi1data]*.99999
-plt.errorbar(logr_list, y1data, yerr=[verr2,errors20], label=' -20 errors')
+plt.errorbar(logr_list, y1data, yerr=[verr2,errors20], label='-20 errors')
 
 verr21 = np.array(errors21)
 verr21[errors21>=Xi3data] = Xi3data[errors21>=Xi3data]*.99999
