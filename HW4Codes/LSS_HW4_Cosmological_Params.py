@@ -107,7 +107,8 @@ admpc3 = cosmo3.angular_diameter_distance(redshifts)
 admpc4 = cosmo4.angular_diameter_distance(redshifts)
 
 
-#CONVERT TO APPROPIATE UNITS
+#CONVERT TO APPROPIATE UNITS -> Mpc to Gpc.
+
 dc1 = dcmpc1 / 1000.
 dc2 = dcmpc2 / 1000.
 dc3 = dcmpc3 / 1000.
@@ -191,8 +192,6 @@ vol1 = getvol(dc1)
 vol2 = getvol(dc2)
 vol3 = getvol(dc3)
 vol4 = getvol(dc4)
-
-
 plt.plot(redshifts, vol1, label="cosmo1")
 plt.plot(redshifts, vol2, label="cosmo2")
 plt.plot(redshifts, vol3, label="cosmo3")
@@ -202,8 +201,6 @@ plt.legend(loc='best')
 plt.savefig(figure_name)
 print("Saving plot: %s" % figure_name)
 plt.clf()
-
-
 
 
 #AGE DISTANCE PLOT
@@ -242,29 +239,6 @@ plt.legend(loc='best')
 plt.savefig(figure_name)
 print("Saving plot: %s" % figure_name)
 plt.clf()
-
-
-
-
-xpoints = [1, 2, 5, 10]
-ypoints = [1, 2, 5, 10]
-
-"""
-xmax = max(xpoints)
-ymax = max(ypoints)
-xmin = min(xpoints)
-ymin = max(ypoints)
-
-
-size = unisize*tensize*estsize
-plt.scatter(xpoints, ypoints, s=size, c='r', marker='o')
-figure_name=os.path.expanduser('~/TestPlotDotSize1' +'.png')
-plt.savefig(figure_name)
-print("Saving plot: %s" % figure_name)
-plt.clf()
-"""
-
-
 
 
 
