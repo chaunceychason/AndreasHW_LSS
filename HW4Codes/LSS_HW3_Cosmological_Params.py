@@ -51,8 +51,10 @@ print
 print "Setting Date String"
 datestring = "Apr11"
 
-num_z_points = 20
-redshifts = np.linspace(0, 4, num=num_z_points)
+num_z_points = 100
+redshift_max = 3
+redshift_min = 0
+redshifts = np.linspace(redshift_min, redshift_max, num=num_z_points)
 
 
 # h, Om, Oa, w 
